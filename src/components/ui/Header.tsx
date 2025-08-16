@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Sun, Moon, Monitor, Wrench, BookOpen } from "lucide-react";
+import { Sun, Moon, Monitor, Wrench, BookOpen, Github, User } from "lucide-react";
 import DocsModal from "./DocsModal";
 import ToolsModal from "./ToolsModal";
 
@@ -59,6 +59,26 @@ const Header: React.FC = () => {
 
       {/* Right: Actions */}
       <div className="flex items-center gap-1">
+        <a
+          href="https://github.com/codingdud/kubernetes-yaml-builder"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-1.5 rounded-md bg-blue-500 dark:bg-gray-700 hover:bg-blue-400 dark:hover:bg-gray-600 transition-colors"
+          title="GitHub Repository"
+        >
+          <Github className="h-4 w-4" />
+        </a>
+
+        <a
+          href="https://codingdud.github.io/portfolio/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-1.5 rounded-md bg-blue-500 dark:bg-gray-700 hover:bg-blue-400 dark:hover:bg-gray-600 transition-colors"
+          title="Developer Profile"
+        >
+          <User className="h-4 w-4" />
+        </a>
+
         <button
           onClick={() => setIsToolsOpen(true)}
           className="p-1.5 rounded-md bg-blue-500 dark:bg-gray-700 hover:bg-blue-400 dark:hover:bg-gray-600 transition-colors"
