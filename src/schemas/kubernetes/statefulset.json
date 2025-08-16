@@ -3,45 +3,149 @@
   "type": "object",
   "required": ["apiVersion", "kind", "metadata", "spec"],
   "properties": {
-    "apiVersion": {"type": "string", "enum": ["apps/v1"], "default": "apps/v1"},
-    "kind": {"type": "string", "enum": ["StatefulSet"], "default": "StatefulSet"},
+    "apiVersion": {
+      "type": "string",
+      "enum": ["apps/v1"],
+      "default": "apps/v1"
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["StatefulSet"],
+      "default": "StatefulSet"
+    },
     "metadata": {
       "type": "object",
       "required": ["name"],
       "properties": {
-        "name": {"type": "string"},
-        "namespace": {"type": "string", "default": "default"},
-        "labels": {"$ref": "#/definitions/keyValuePairs"}
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string",
+          "default": "default"
+        },
+        "labels": {
+          "$ref": "#/definitions/keyValuePairs"
+        }
       }
     },
     "spec": {
       "type": "object",
       "required": ["replicas", "selector", "template", "serviceName"],
       "properties": {
-        "replicas": {"type": "integer", "minimum": 1, "default": 1},
+        "replicas": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 3
+        },
+        "serviceName": {
+          "type": "string"
+        },
         "selector": {
           "type": "object",
           "required": ["matchLabels"],
-          "properties": {"matchLabels": {"$ref": "#/definitions/keyValuePairs"}}
+          "properties": {
+            "matchLabels": {
+              "$ref": "#/definitions/keyValuePairs"
+            }
+          }
         },
         "template": {
           "type": "object",
           "required": ["metadata", "spec"],
           "properties": {
-            "metadata": {"type": "object", "properties": {"labels": {"$ref": "#/definitions/keyValuePairs"}}},
+            "metadata": {
+              "type": "object",
+              "properties": {
+                "labels": {
+                  "$ref": "#/definitions/keyValuePairs"
+                }
+              }
+            },
             "spec": {
               "type": "object",
               "required": ["containers"],
               "properties": {
+                "terminationGracePeriodSeconds": {
+                  "type": "integer",
+                  "default": 30
+                },
                 "containers": {
                   "type": "array",
                   "items": {
                     "type": "object",
                     "required": ["name", "image"],
                     "properties": {
-                      "name": {"type": "string"},
-                      "image": {"type": "string"},
-                      "ports": {"type": "array", "items": {"type": "object", "properties": {"containerPort": {"type": "integer"}}}}
+                      "name": {
+                        "type": "string"
+                      },
+                      "image": {
+                        "type": "string"
+                      },
+                      "ports": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "containerPort": {
+                              "type": "integer"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "protocol": {
+                              "type": "string",
+                              "enum": ["TCP", "UDP"],
+                              "default": "TCP"
+                            }
+                          }
+                        }
+                      },
+                      "volumeMounts": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "mountPath": {
+                              "type": "string"
+                            },
+                            "readOnly": {
+                              "type": "boolean",
+                              "default": false
+                            }
+                          }
+                        }
+                      },
+                      "resources": {
+                        "type": "object",
+                        "properties": {
+                          "requests": {
+                            "type": "object",
+                            "properties": {
+                              "cpu": {
+                                "type": "string"
+                              },
+                              "memory": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "limits": {
+                            "type": "object",
+                            "properties": {
+                              "cpu": {
+                                "type": "string"
+                              },
+                              "memory": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
                     }
                   }
                 }
@@ -49,21 +153,51 @@
             }
           }
         },
-        "serviceName": {"type": "string"},
         "volumeClaimTemplates": {
           "type": "array",
           "items": {
             "type": "object",
             "required": ["metadata", "spec"],
             "properties": {
-              "metadata": {"type": "object", "properties": {"name": {"type": "string"}}},
+              "metadata": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              },
               "spec": {
                 "type": "object",
+                "required": ["accessModes", "resources"],
                 "properties": {
-                  "accessModes": {"type": "array", "items": {"type": "string", "enum": ["ReadWriteOnce", "ReadOnlyMany", "ReadWriteMany"]}},
+                  "accessModes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": ["ReadWriteOnce", "ReadOnlyMany", "ReadWriteMany", "ReadWriteOncePod"]
+                    },
+                    "default": ["ReadWriteOnce"]
+                  },
+                  "storageClassName": {
+                    "type": "string"
+                  },
                   "resources": {
                     "type": "object",
-                    "properties": {"requests": {"type": "object", "properties": {"storage": {"type": "string"}}}}
+                    "required": ["requests"],
+                    "properties": {
+                      "requests": {
+                        "type": "object",
+                        "required": ["storage"],
+                        "properties": {
+                          "storage": {
+                            "type": "string",
+                            "default": "1Gi"
+                          }
+                        }
+                      }
+                    }
                   }
                 }
               }
@@ -73,5 +207,12 @@
       }
     }
   },
-  "definitions": {"keyValuePairs": {"type": "object", "additionalProperties": {"type": "string"}}}
+  "definitions": {
+    "keyValuePairs": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  }
 }

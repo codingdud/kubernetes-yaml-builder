@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { X, Copy, Check } from "lucide-react";
-import { Button } from "./button";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ToolsModalProps {
   isOpen: boolean;
@@ -8,7 +11,7 @@ interface ToolsModalProps {
 }
 
 const ToolsModal: React.FC<ToolsModalProps> = ({ isOpen, onClose }) => {
-  const [activeTool, setActiveTool] = useState<"base64" | "url" | "json" | "hash">("base64");
+
   const [base64Input, setBase64Input] = useState("");
   const [base64Output, setBase64Output] = useState("");
   const [base64Mode, setBase64Mode] = useState<"encode" | "decode">("encode");
@@ -49,91 +52,107 @@ const ToolsModal: React.FC<ToolsModalProps> = ({ isOpen, onClose }) => {
         </button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-gray-200 dark:border-gray-700 text-sm">
-        {[
-          { key: "base64", label: "Base64" },
-          { key: "url", label: "URL" },
-          { key: "json", label: "JSON" },
-          { key: "hash", label: "Hash" },
-        ].map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTool(tab.key as any)}
-            className={`flex-1 px-3 py-2 text-center ${
-              activeTool === tab.key
-                ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 font-medium"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Body */}
-      <div className="p-3 overflow-y-auto h-[calc(100vh-100px)] text-sm">
-        {activeTool === "base64" && (
-          <div className="space-y-3">
-            {/* Mode Switch */}
-            <div className="flex gap-2">
-              <Button
-                variant={base64Mode === "encode" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setBase64Mode("encode")}
-              >
-                Encode
-              </Button>
-              <Button
-                variant={base64Mode === "decode" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setBase64Mode("decode")}
-              >
-                Decode
-              </Button>
-            </div>
-
-            {/* Input */}
-            <textarea
-              value={base64Input}
-              onChange={(e) => setBase64Input(e.target.value)}
-              className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500"
-              rows={3}
-              placeholder={base64Mode === "encode" ? "Enter text..." : "Enter Base64..."}
-            />
-
-            <Button onClick={handleBase64Convert} className="w-full text-sm">
-              {base64Mode === "encode" ? "Encode → Base64" : "Decode → Text"}
-            </Button>
-
-            {/* Output */}
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-gray-600 dark:text-gray-400">Output</span>
-                {base64Output && (
-                  <button
-                    onClick={() => copyToClipboard(base64Output)}
-                    className="flex items-center gap-1 text-blue-600 dark:text-blue-400 text-xs hover:underline"
+      {/* Content */}
+      <div className="p-4 overflow-y-auto h-[calc(100vh-80px)]">
+        <Tabs defaultValue="base64" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="base64">Base64</TabsTrigger>
+            <TabsTrigger value="url">URL</TabsTrigger>
+            <TabsTrigger value="json">JSON</TabsTrigger>
+            <TabsTrigger value="hash">Hash</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="base64" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Base64 Encoder/Decoder</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2">
+                  <Button
+                    variant={base64Mode === "encode" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setBase64Mode("encode")}
                   >
-                    {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                    {copied ? "Copied" : "Copy"}
-                  </button>
-                )}
-              </div>
-              <textarea
-                value={base64Output}
-                readOnly
-                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white"
-                rows={3}
-                placeholder="Output..."
-              />
-            </div>
-          </div>
-        )}
+                    Encode
+                  </Button>
+                  <Button
+                    variant={base64Mode === "decode" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setBase64Mode("decode")}
+                  >
+                    Decode
+                  </Button>
+                </div>
 
-        {activeTool === "url" && <p className="text-gray-500 dark:text-gray-400">🔧 URL Encoder/Decoder coming soon...</p>}
-        {activeTool === "json" && <p className="text-gray-500 dark:text-gray-400">🔧 JSON Formatter coming soon...</p>}
-        {activeTool === "hash" && <p className="text-gray-500 dark:text-gray-400">🔧 Hash Generator coming soon...</p>}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Input ({base64Mode === "encode" ? "Plain Text" : "Base64"})
+                  </label>
+                  <Textarea
+                    value={base64Input}
+                    onChange={(e) => setBase64Input(e.target.value)}
+                    placeholder={base64Mode === "encode" ? "Enter text to encode..." : "Enter base64 to decode..."}
+                    rows={4}
+                  />
+                </div>
+
+                <Button onClick={handleBase64Convert} className="w-full">
+                  {base64Mode === "encode" ? "Encode to Base64" : "Decode from Base64"}
+                </Button>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <label className="text-sm font-medium">
+                      Output ({base64Mode === "encode" ? "Base64" : "Plain Text"})
+                    </label>
+                    {base64Output && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyToClipboard(base64Output)}
+                        className="h-8 px-2"
+                      >
+                        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        {copied ? "Copied!" : "Copy"}
+                      </Button>
+                    )}
+                  </div>
+                  <Textarea
+                    value={base64Output}
+                    readOnly
+                    placeholder="Output will appear here..."
+                    rows={4}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="url">
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-muted-foreground">🔧 URL Encoder/Decoder coming soon...</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="json">
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-muted-foreground">🔧 JSON Formatter coming soon...</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="hash">
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-muted-foreground">🔧 Hash Generator coming soon...</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

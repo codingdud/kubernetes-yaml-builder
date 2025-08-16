@@ -1,7 +1,7 @@
 import React, { memo, useState } from 'react';
 import { Handle, Position, useReactFlow } from '@xyflow/react';
 import { X, ChevronDown, ChevronUp } from 'lucide-react';
-import DynamicK8sForm from '@/components/forms/DynamicK8sForm';
+import DynamicK8sForm  from '@/components/forms/DynamicK8sForm';
 import { type K8sNode } from '@/types/reactFlow';
 
 interface ResourceNodeProps {

@@ -3,6 +3,7 @@ import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CodePreview from '@/components/ui/CodePreview';
 import resourceRegistry from '@/config/resourceRegistry';
+import { useDnD } from './DnDContext';
 
 interface SidebarProps {
   onAddNode: (kind: keyof typeof resourceRegistry) => void;
@@ -12,10 +13,16 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ onAddNode, yaml, onCollapseChange }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { setType } = useDnD();
 
   const toggleCollapse = (collapsed: boolean) => {
     setIsCollapsed(collapsed);
     onCollapseChange(collapsed);
+  };
+
+  const onDragStart = (event: React.DragEvent, nodeType: string) => {
+    setType(nodeType);
+    event.dataTransfer.effectAllowed = 'move';
   };
 
   if (isCollapsed) {
@@ -46,17 +53,22 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddNode, yaml, onCollapseChange }) 
           </button>
         </div>
         
-        <div className="mb-4 flex flex-wrap gap-2">
-          {Object.keys(resourceRegistry).map((kind) => (
-            <Button 
-              key={kind} 
-              onClick={() => onAddNode(kind as keyof typeof resourceRegistry)} 
-              className="text-xs px-2 py-1"
-              size="sm"
-            >
-              Add {kind}
-            </Button>
-          ))}
+        <div className="mb-4">
+          <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">Click to add or drag to canvas</p>
+          <div className="flex flex-wrap gap-2">
+            {Object.keys(resourceRegistry).map((kind) => (
+              <Button 
+                key={kind} 
+                onClick={() => onAddNode(kind as keyof typeof resourceRegistry)}
+                onDragStart={(event) => onDragStart(event, kind)}
+                draggable
+                className="text-xs px-2 py-1 cursor-grab active:cursor-grabbing"
+                size="sm"
+              >
+                Add {kind}
+              </Button>
+            ))}
+          </div>
         </div>
         <CodePreview yaml={yaml} />
       </div>

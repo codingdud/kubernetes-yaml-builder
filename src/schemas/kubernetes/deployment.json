@@ -47,6 +47,29 @@
             }
           }
         },
+        "strategy": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["RollingUpdate", "Recreate"],
+              "default": "RollingUpdate"
+            },
+            "rollingUpdate": {
+              "type": "object",
+              "properties": {
+                "maxSurge": {
+                  "type": "string",
+                  "default": "25%"
+                },
+                "maxUnavailable": {
+                  "type": "string",
+                  "default": "25%"
+                }
+              }
+            }
+          }
+        },
         "template": {
           "type": "object",
           "required": ["metadata", "spec"],
@@ -63,6 +86,11 @@
               "type": "object",
               "required": ["containers"],
               "properties": {
+                "restartPolicy": {
+                  "type": "string",
+                  "enum": ["Always", "OnFailure", "Never"],
+                  "default": "Always"
+                },
                 "containers": {
                   "type": "array",
                   "items": {
@@ -75,6 +103,166 @@
                       "image": {
                         "type": "string"
                       },
+                      "resources": {
+                        "type": "object",
+                        "properties": {
+                          "requests": {
+                            "type": "object",
+                            "properties": {
+                              "cpu": {
+                                "type": "string",
+                                "default": "100m"
+                              },
+                              "memory": {
+                                "type": "string",
+                                "default": "100Mi"
+                              }
+                            }
+                          },
+                          "limits": {
+                            "type": "object",
+                            "properties": {
+                              "cpu": {
+                                "type": "string",
+                                "default": "100m"
+                              },
+                              "memory": {
+                                "type": "string",
+                                "default": "100Mi"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "livenessProbe": {
+                        "type": "object",
+                        "properties": {
+                          "tcpSocket": {
+                            "type": "object",
+                            "properties": {
+                              "port": {
+                                "type": "integer"
+                              }
+                            }
+                          },
+                          "httpGet": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "port": {
+                                "type": "integer"
+                              }
+                            }
+                          },
+                          "initialDelaySeconds": {
+                            "type": "integer",
+                            "default": 5
+                          },
+                          "timeoutSeconds": {
+                            "type": "integer",
+                            "default": 5
+                          },
+                          "successThreshold": {
+                            "type": "integer",
+                            "default": 1
+                          },
+                          "failureThreshold": {
+                            "type": "integer",
+                            "default": 3
+                          },
+                          "periodSeconds": {
+                            "type": "integer",
+                            "default": 10
+                          }
+                        }
+                      },
+                      "readinessProbe": {
+                        "type": "object",
+                        "properties": {
+                          "tcpSocket": {
+                            "type": "object",
+                            "properties": {
+                              "port": {
+                                "type": "integer"
+                              }
+                            }
+                          },
+                          "httpGet": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "port": {
+                                "type": "integer"
+                              }
+                            }
+                          },
+                          "initialDelaySeconds": {
+                            "type": "integer",
+                            "default": 5
+                          },
+                          "timeoutSeconds": {
+                            "type": "integer",
+                            "default": 2
+                          },
+                          "successThreshold": {
+                            "type": "integer",
+                            "default": 1
+                          },
+                          "failureThreshold": {
+                            "type": "integer",
+                            "default": 3
+                          },
+                          "periodSeconds": {
+                            "type": "integer",
+                            "default": 10
+                          }
+                        }
+                      },
+                      "env": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "value": {
+                              "type": "string"
+                            },
+                            "valueFrom": {
+                              "type": "object",
+                              "properties": {
+                                "configMapKeyRef": {
+                                  "type": "object",
+                                  "properties": {
+                                    "name": {
+                                      "type": "string"
+                                    },
+                                    "key": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "secretKeyRef": {
+                                  "type": "object",
+                                  "properties": {
+                                    "name": {
+                                      "type": "string"
+                                    },
+                                    "key": {
+                                      "type": "string"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
                       "ports": {
                         "type": "array",
                         "items": {
@@ -82,7 +270,68 @@
                           "properties": {
                             "containerPort": {
                               "type": "integer"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "protocol": {
+                              "type": "string",
+                              "enum": ["TCP", "UDP"],
+                              "default": "TCP"
                             }
+                          }
+                        }
+                      },
+                      "volumeMounts": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "mountPath": {
+                              "type": "string"
+                            },
+                            "readOnly": {
+                              "type": "boolean",
+                              "default": false
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "volumes": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "hostPath": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "configMap": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "secret": {
+                        "type": "object",
+                        "properties": {
+                          "secretName": {
+                            "type": "string"
                           }
                         }
                       }

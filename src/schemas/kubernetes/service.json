@@ -36,33 +36,73 @@
         "selector": {
           "$ref": "#/definitions/keyValuePairs"
         },
-        "ports": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "required": ["port"],
-            "properties": {
-              "port": {
-                "type": "integer"
-              },
-              "targetPort": {
-                "type": "integer"
-              },
-              "protocol": {
-                "type": "string",
-                "enum": ["TCP", "UDP"],
-                "default": "TCP"
-              },
-              "nodePort": {
-                "type": "integer"
+        "type": {
+          "type": "string",
+          "enum": ["ClusterIP", "NodePort", "LoadBalancer", "ExternalName"],
+          "default": "ClusterIP"
+        },
+        "sessionAffinity": {
+          "type": "string",
+          "enum": ["None", "ClientIP"],
+          "default": "None"
+        },
+        "sessionAffinityConfig": {
+          "type": "object",
+          "properties": {
+            "clientIP": {
+              "type": "object",
+              "properties": {
+                "timeoutSeconds": {
+                  "type": "integer",
+                  "default": 10800,
+                  "minimum": 1,
+                  "maximum": 86400
+                }
               }
             }
           }
         },
-        "type": {
-          "type": "string",
-          "enum": ["ClusterIP", "NodePort", "LoadBalancer"],
-          "default": "ClusterIP"
+        "externalName": {
+          "type": "string"
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["port", "targetPort"],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "port": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 65535
+              },
+              "targetPort": {
+                "oneOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 65535
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "protocol": {
+                "type": "string",
+                "enum": ["TCP", "UDP", "SCTP"],
+                "default": "TCP"
+              },
+              "nodePort": {
+                "type": "integer",
+                "minimum": 30000,
+                "maximum": 32767
+              }
+            }
+          }
         }
       }
     }
