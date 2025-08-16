@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import Form from '@rjsf/core';
 import validator from '@rjsf/validator-ajv8';
-import { K8sNodeData } from '@/types/reactFlow';
+import { type K8sNodeData } from '@/types/reactFlow';
 import KeyValueWidget from './widgets/KeyValueWidget';
 
 interface DynamicK8sFormProps {
@@ -13,22 +13,26 @@ const widgets = {
 };
 
 const DynamicK8sForm: React.FC<DynamicK8sFormProps> = ({ nodeData }) => {
-  const handleChange = useCallback(({ formData }: { formData: any }) => {
-    nodeData.resource = formData;
+  const handleChange = useCallback((data: any) => {
+    if (data.formData) {
+      nodeData.resource = data.formData;
+    }
   }, [nodeData]);
 
   return (
-    <Form
-      schema={nodeData.schema}
-      uiSchema={nodeData.uiSchema}
-      formData={nodeData.resource}
-      onChange={handleChange}
-      validator={validator}
-      widgets={widgets}
-      showErrorList={false}
-    >
-      <div />
-    </Form>
+    <div className="rjsf space-y-3">
+      <Form
+        schema={nodeData.schema}
+        uiSchema={nodeData.uiSchema}
+        formData={nodeData.resource}
+        onChange={handleChange}
+        validator={validator}
+        widgets={widgets}
+        showErrorList={false}
+      >
+        <div />
+      </Form>
+    </div>
   );
 };
 

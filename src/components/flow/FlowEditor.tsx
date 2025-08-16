@@ -2,8 +2,7 @@ import React, { useCallback, useState, useMemo } from 'react';
 import { ReactFlow, useNodesState, useEdgesState, addEdge, MiniMap, Controls, Background, type Connection, type Edge } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { type K8sNode } from '@/types/reactFlow';
-import { Button } from '@/components/ui/button';
-import CodePreview from '@/components/ui/CodePreview';
+import Sidebar from './Sidebar';
 import resourceRegistry from '@/config/resourceRegistry';
 import * as yaml from 'js-yaml';
 
@@ -11,10 +10,14 @@ const FlowEditor: React.FC = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState<K8sNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [nextId, setNextId] = useState(1);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const nodeTypes = useMemo(() => 
     Object.fromEntries(
-      Object.entries(resourceRegistry).map(([kind, { NodeComponent }]) => [kind.toLowerCase(), NodeComponent])
+      Object.entries(resourceRegistry).map(([kind, { NodeComponent }]) => [
+        kind.toLowerCase(), 
+        (props: any) => <NodeComponent {...props} id={props.id} />
+      ])
     ), []
   );
 
@@ -39,8 +42,8 @@ const FlowEditor: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen">
-      <div className="w-3/4 h-full">
+    <div className="flex h-full">
+      <div className={`${isSidebarCollapsed ? 'w-full' : 'w-3/4'} h-full transition-all duration-300`}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -55,21 +58,11 @@ const FlowEditor: React.FC = () => {
           <Background />
         </ReactFlow>
       </div>
-      <div className="w-1/4 p-4 bg-gray-100 overflow-auto">
-        <div className="mb-4 flex flex-wrap gap-2">
-          {Object.keys(resourceRegistry).map((kind) => (
-            <Button 
-              key={kind} 
-              onClick={() => addNode(kind as keyof typeof resourceRegistry)} 
-              className="text-xs px-2 py-1"
-              size="sm"
-            >
-              Add {kind}
-            </Button>
-          ))}
-        </div>
-        <CodePreview yaml={generateYAML()} />
-      </div>
+      <Sidebar 
+        onAddNode={addNode} 
+        yaml={generateYAML()} 
+        onCollapseChange={setIsSidebarCollapsed}
+      />
     </div>
   );
 };
