@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": {"type": "string", "enum": ["batch/v1"], "default": "batch/v1"},
+    "kind": {"type": "string", "enum": ["CronJob"], "default": "CronJob"},
+    "metadata": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {"type": "string"},
+        "namespace": {"type": "string", "default": "default"},
+        "labels": {"$ref": "#/definitions/keyValuePairs"}
+      }
+    },
+    "spec": {
+      "type": "object",
+      "required": ["schedule", "jobTemplate"],
+      "properties": {
+        "schedule": {"type": "string"},
+        "jobTemplate": {
+          "type": "object",
+          "required": ["spec"],
+          "properties": {
+            "spec": {
+              "type": "object",
+              "required": ["template"],
+              "properties": {
+                "template": {
+                  "type": "object",
+                  "required": ["spec"],
+                  "properties": {
+                    "spec": {
+                      "type": "object",
+                      "required": ["containers"],
+                      "properties": {
+                        "containers": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": ["name", "image"],
+                            "properties": {
+                              "name": {"type": "string"},
+                              "image": {"type": "string"},
+                              "command": {"type": "array", "items": {"type": "string"}}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {"keyValuePairs": {"type": "object", "additionalProperties": {"type": "string"}}}
+}

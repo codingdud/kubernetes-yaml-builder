@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": {"type": "string", "enum": ["apps/v1"], "default": "apps/v1"},
+    "kind": {"type": "string", "enum": ["StatefulSet"], "default": "StatefulSet"},
+    "metadata": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {"type": "string"},
+        "namespace": {"type": "string", "default": "default"},
+        "labels": {"$ref": "#/definitions/keyValuePairs"}
+      }
+    },
+    "spec": {
+      "type": "object",
+      "required": ["replicas", "selector", "template", "serviceName"],
+      "properties": {
+        "replicas": {"type": "integer", "minimum": 1, "default": 1},
+        "selector": {
+          "type": "object",
+          "required": ["matchLabels"],
+          "properties": {"matchLabels": {"$ref": "#/definitions/keyValuePairs"}}
+        },
+        "template": {
+          "type": "object",
+          "required": ["metadata", "spec"],
+          "properties": {
+            "metadata": {"type": "object", "properties": {"labels": {"$ref": "#/definitions/keyValuePairs"}}},
+            "spec": {
+              "type": "object",
+              "required": ["containers"],
+              "properties": {
+                "containers": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["name", "image"],
+                    "properties": {
+                      "name": {"type": "string"},
+                      "image": {"type": "string"},
+                      "ports": {"type": "array", "items": {"type": "object", "properties": {"containerPort": {"type": "integer"}}}}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "serviceName": {"type": "string"},
+        "volumeClaimTemplates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["metadata", "spec"],
+            "properties": {
+              "metadata": {"type": "object", "properties": {"name": {"type": "string"}}},
+              "spec": {
+                "type": "object",
+                "properties": {
+                  "accessModes": {"type": "array", "items": {"type": "string", "enum": ["ReadWriteOnce", "ReadOnlyMany", "ReadWriteMany"]}},
+                  "resources": {
+                    "type": "object",
+                    "properties": {"requests": {"type": "object", "properties": {"storage": {"type": "string"}}}}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {"keyValuePairs": {"type": "object", "additionalProperties": {"type": "string"}}}
+}

@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "enum": ["v1"],
+      "default": "v1"
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["Service"],
+      "default": "Service"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string",
+          "default": "default"
+        },
+        "labels": {
+          "$ref": "#/definitions/keyValuePairs"
+        }
+      }
+    },
+    "spec": {
+      "type": "object",
+      "required": ["selector", "ports"],
+      "properties": {
+        "selector": {
+          "$ref": "#/definitions/keyValuePairs"
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["port"],
+            "properties": {
+              "port": {
+                "type": "integer"
+              },
+              "targetPort": {
+                "type": "integer"
+              },
+              "protocol": {
+                "type": "string",
+                "enum": ["TCP", "UDP"],
+                "default": "TCP"
+              },
+              "nodePort": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        "type": {
+          "type": "string",
+          "enum": ["ClusterIP", "NodePort", "LoadBalancer"],
+          "default": "ClusterIP"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "keyValuePairs": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  }
+}

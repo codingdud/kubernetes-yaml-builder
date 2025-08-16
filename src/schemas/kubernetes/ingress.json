@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": {"type": "string", "enum": ["networking.k8s.io/v1"], "default": "networking.k8s.io/v1"},
+    "kind": {"type": "string", "enum": ["Ingress"], "default": "Ingress"},
+    "metadata": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {"type": "string"},
+        "namespace": {"type": "string", "default": "default"},
+        "labels": {"$ref": "#/definitions/keyValuePairs"}
+      }
+    },
+    "spec": {
+      "type": "object",
+      "properties": {
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "host": {"type": "string"},
+              "http": {
+                "type": "object",
+                "properties": {
+                  "paths": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["path", "backend"],
+                      "properties": {
+                        "path": {"type": "string"},
+                        "pathType": {"type": "string", "enum": ["Prefix", "Exact", "ImplementationSpecific"], "default": "Prefix"},
+                        "backend": {
+                          "type": "object",
+                          "properties": {
+                            "service": {
+                              "type": "object",
+                              "properties": {
+                                "name": {"type": "string"},
+                                "port": {"type": "object", "properties": {"number": {"type": "integer"}}}
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tls": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "hosts": {"type": "array", "items": {"type": "string"}},
+              "secretName": {"type": "string"}
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {"keyValuePairs": {"type": "object", "additionalProperties": {"type": "string"}}}
+}
