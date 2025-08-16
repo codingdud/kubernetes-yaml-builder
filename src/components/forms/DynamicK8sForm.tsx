@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import Form from '@rjsf/shadcn';
 import validator from '@rjsf/validator-ajv8';
-import { type K8sNodeData } from '@/types/reactFlow';
+import { type K8sNodeData } from '../../types/reactFlow';
 import KeyValueWidget from './widgets/KeyValueWidget';
 import CustomTextWidget from './widgets/CustomTextWidget';
 import CustomSelectWidget from './widgets/CustomSelectWidget';

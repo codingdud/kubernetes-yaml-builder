@@ -1,15 +1,15 @@
 import React, { useCallback, useState, useMemo, useRef } from 'react';
-import { ReactFlow, useNodesState, useEdgesState, addEdge, MiniMap, Controls, Background, type Connection, type Edge, ReactFlowProvider, useReactFlow } from '@xyflow/react';
+import { ReactFlow, useNodesState, useEdgesState, addEdge, MiniMap, Controls, Background, type Connection, type Edge, ReactFlowProvider, useReactFlow, type Node, type NodeProps } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { type K8sNode } from '@/types/reactFlow';
+import { type K8sNode } from '../../types/reactFlow';
 import Sidebar from './Sidebar';
-import resourceRegistry from '@/config/resourceRegistry';
+import resourceRegistry from '../../config/resourceRegistry';
 import { useDnD } from './DnDContext';
 import * as yaml from 'js-yaml';
 
 const FlowEditorInner: React.FC = () => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const [nodes, setNodes, onNodesChange] = useNodesState<K8sNode>([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [nextId, setNextId] = useState(1);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -20,7 +20,13 @@ const FlowEditorInner: React.FC = () => {
     Object.fromEntries(
       Object.entries(resourceRegistry).map(([kind, { NodeComponent }]) => [
         kind.toLowerCase(), 
-        (props: any) => <NodeComponent {...props} id={props.id} />
+        (props: NodeProps) => {
+          const k8sProps = {
+            ...props,
+            data: props.data as K8sNode['data']
+          };
+          return <NodeComponent {...k8sProps} id={props.id} />;
+        }
       ])
     ), []
   );
@@ -64,7 +70,10 @@ const FlowEditorInner: React.FC = () => {
 
   const generateYAML = () => {
     if (nodes.length === 0) return '';
-    const yamlDocs = nodes.map((node) => yaml.dump((node as K8sNode).data.resource, { indent: 2 }));
+    const yamlDocs = nodes.map((node) => {
+      const k8sNode = node as K8sNode;
+      return yaml.dump(k8sNode.data.resource, { indent: 2 });
+    });
     return yamlDocs.join('---\n');
   };
 

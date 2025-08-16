@@ -1,19 +1,19 @@
-import deploymentSchema from '@/schemas/kubernetes/deployment.json';
-import serviceSchema from '@/schemas/kubernetes/service.json';
-import statefulsetSchema from '@/schemas/kubernetes/statefulset.json';
-import daemonsetSchema from '@/schemas/kubernetes/daemonset.json';
-import configmapSchema from '@/schemas/kubernetes/configmap.json';
-import jobSchema from '@/schemas/kubernetes/job.json';
-import secretSchema from '@/schemas/kubernetes/secret.json';
-import cronjobSchema from '@/schemas/kubernetes/cronjob.json';
-import ingressSchema from '@/schemas/kubernetes/ingress.json';
+import deploymentSchema from '../schemas/kubernetes/deployment.json';
+import serviceSchema from '../schemas/kubernetes/service.json';
+import statefulsetSchema from '../schemas/kubernetes/statefulset.json';
+import daemonsetSchema from '../schemas/kubernetes/daemonset.json';
+import configmapSchema from '../schemas/kubernetes/configmap.json';
+import jobSchema from '../schemas/kubernetes/job.json';
+import secretSchema from '../schemas/kubernetes/secret.json';
+import cronjobSchema from '../schemas/kubernetes/cronjob.json';
+import ingressSchema from '../schemas/kubernetes/ingress.json';
 
 import {
   deploymentUiSchema, serviceUiSchema, statefulsetUiSchema, daemonsetUiSchema,
   configmapUiSchema, jobUiSchema, secretUiSchema, cronjobUiSchema, ingressUiSchema
-} from '@/schemas/uiSchema';
+} from '../schemas/uiSchema';
 
-import ResourceNode from '@/components/flow/nodes/ResourceNode';
+import ResourceNode from '../components/flow/nodes/ResourceNode';
 
 const resourceRegistry = {
   Deployment: {

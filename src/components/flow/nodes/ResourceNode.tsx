@@ -1,8 +1,8 @@
 import React, { memo, useState } from 'react';
 import { Handle, Position, useReactFlow } from '@xyflow/react';
 import { X, ChevronDown, ChevronUp } from 'lucide-react';
-import DynamicK8sForm  from '@/components/forms/DynamicK8sForm';
-import { type K8sNode } from '@/types/reactFlow';
+import DynamicK8sForm  from '../../forms/DynamicK8sForm';
+import { type K8sNode } from '../../../types/reactFlow';
 
 interface ResourceNodeProps {
   id: string;
@@ -44,10 +44,10 @@ const ResourceNode: React.FC<ResourceNodeProps> = memo(({ id, data }) => {
       
       <div className="mb-4 pr-16">
         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
-          {data.resource.kind}
+          {(data.resource as any)?.kind || 'Resource'}
         </h3>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          {data.resource.metadata?.name || 'Unnamed'}
+          {(data.resource as any)?.metadata?.name || 'Unnamed'}
         </p>
       </div>
       

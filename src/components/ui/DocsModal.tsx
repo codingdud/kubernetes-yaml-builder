@@ -1,7 +1,7 @@
 import React from "react";
 import { X } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import yamlExamples from "@/data/yamlExamples.json";
+import { Card, CardContent, CardHeader, CardTitle } from "./card";
+import yamlExamples from "../../data/yamlExamples.json";
 
 interface DocsModalProps {
   isOpen: boolean;

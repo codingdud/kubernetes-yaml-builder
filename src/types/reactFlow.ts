@@ -1,11 +1,9 @@
-import type { Node } from '@xyflow/react';
-import type { KubernetesResource } from './kubernetes';
-import type { JSONSchema7 } from 'json-schema';
-import type { UiSchema } from '@rjsf/utils';
+import { type Node } from '@xyflow/react';
+import { type RJSFSchema, type UiSchema } from '@rjsf/utils';
 
 export interface K8sNodeData extends Record<string, unknown> {
-  resource: KubernetesResource;
-  schema: JSONSchema7;
+  resource: Record<string, unknown>;
+  schema: RJSFSchema;
   uiSchema: UiSchema;
 }
 

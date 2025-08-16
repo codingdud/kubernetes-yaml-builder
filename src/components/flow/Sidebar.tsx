@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import CodePreview from '@/components/ui/CodePreview';
-import resourceRegistry from '@/config/resourceRegistry';
+import { Button } from '../ui/button';
+import CodePreview from '../ui/CodePreview';
+import resourceRegistry from '../../config/resourceRegistry';
 import { useDnD } from './DnDContext';
 
 interface SidebarProps {

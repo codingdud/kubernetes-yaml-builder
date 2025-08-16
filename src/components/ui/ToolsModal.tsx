@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { X, Copy, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "./button";
+import { Card, CardContent, CardHeader, CardTitle } from "./card";
+import { Textarea } from "./textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs";
 
 interface ToolsModalProps {
   isOpen: boolean;
