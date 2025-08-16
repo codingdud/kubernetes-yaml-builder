@@ -1,4 +1,3 @@
-import React from 'react';
 import Header from './components/ui/Header';
 import FlowEditor from './components/flow/FlowEditor';
 import './index.css';

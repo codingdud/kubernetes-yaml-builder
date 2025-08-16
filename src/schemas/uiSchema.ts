@@ -1,4 +1,4 @@
-import { UiSchema } from '@rjsf/utils';
+import { type UiSchema } from '@rjsf/utils';
 
 export const deploymentUiSchema: UiSchema = {
   'metadata': {
