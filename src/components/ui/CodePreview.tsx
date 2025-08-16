@@ -41,7 +41,7 @@ const CodePreview: React.FC<CodePreviewProps> = ({ yaml }) => {
         </div>
       </CardHeader>
       <CardContent>
-        <pre className="bg-gray-900 dark:bg-gray-950 text-green-400 dark:text-green-300 p-1 rounded-md overflow-auto text-sm font-mono whitespace-pre-wrap border border-gray-700">
+        <pre className="bg-gray-900 dark:bg-gray-950 text-green-400 dark:text-green-300 p-2 rounded-md overflow-auto text-sm font-mono whitespace-pre-wrap border border-gray-700">
           {yaml || '# Add resources to generate YAML'}
         </pre>
       </CardContent>
