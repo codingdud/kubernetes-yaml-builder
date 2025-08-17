@@ -3,7 +3,6 @@ import { type WidgetProps } from '@rjsf/utils';
 import { Button } from '../../ui/button';
 import { Plus } from 'lucide-react';
 import KeyValuePair from './KeyValuePair';
-import { Handle, Position } from '@xyflow/react';
 
 const KeyValueWidget: React.FC<WidgetProps> = ({ value = {}, onChange, id, formContext }) => {
   const [pairs, setPairs] = useState<Array<{ key: string; value: string }>>(
@@ -40,7 +39,7 @@ const KeyValueWidget: React.FC<WidgetProps> = ({ value = {}, onChange, id, formC
   };
 
   return (
-    <div className="space-y-2 relative">
+    <div className="space-y-2">
       {pairs.map((pair, index) => (
         <KeyValuePair
           key={index}
@@ -61,24 +60,6 @@ const KeyValueWidget: React.FC<WidgetProps> = ({ value = {}, onChange, id, formC
         <Plus className="h-4 w-4" />
         Add Pair
       </Button>
-      {formContext?.nodeId && (
-        <>
-          <Handle
-            type="target"
-            position={Position.Left}
-            id={`${formContext.nodeId}_${id}_widget_target`}
-            className="!w-3 !h-3 !bg-blue-500 !border-2 !border-white !pointer-events-auto"
-            style={{ left: '-6px', top: '20px', pointerEvents: 'auto' }}
-          />
-          <Handle
-            type="source"
-            position={Position.Right}
-            id={`${formContext.nodeId}_${id}_widget_source`}
-            className="!w-3 !h-3 !bg-green-500 !border-2 !border-white !pointer-events-auto"
-            style={{ right: '-6px', top: '20px', pointerEvents: 'auto' }}
-          />
-        </>
-      )}
     </div>
   );
 };

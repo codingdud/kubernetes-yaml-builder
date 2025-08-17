@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { type WidgetProps } from '@rjsf/utils';
 import { Check, ChevronDown, X } from 'lucide-react';
-import { Handle, Position } from '@xyflow/react';
 
 const MultiSelectWidget = (props: WidgetProps) => {
   const {
@@ -9,9 +8,7 @@ const MultiSelectWidget = (props: WidgetProps) => {
     disabled,
     onChange,
     options,
-    rawErrors,
-    formContext,
-    id
+    rawErrors
   } = props;
   const { enumOptions = [] } = options;
   const [isOpen, setIsOpen] = useState(false);
@@ -80,24 +77,6 @@ const MultiSelectWidget = (props: WidgetProps) => {
         <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
-      {formContext?.nodeId && (
-        <>
-          <Handle
-            type="target"
-            position={Position.Left}
-            id={`${formContext.nodeId}_${id}_target`}
-            className="!w-3 !h-3 !bg-blue-500 !border-2 !border-white !pointer-events-auto"
-            style={{ left: '-6px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'auto' }}
-          />
-          <Handle
-            type="source"
-            position={Position.Right}
-            id={`${formContext.nodeId}_${id}_source`}
-            className="!w-3 !h-3 !bg-green-500 !border-2 !border-white !pointer-events-auto"
-            style={{ right: '-6px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'auto' }}
-          />
-        </>
-      )}
       {/* Dropdown menu */}
       {isOpen && (
         <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-auto">
