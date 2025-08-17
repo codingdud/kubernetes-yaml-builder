@@ -10,6 +10,7 @@ import MultiSelectWidget from './widgets/MultiSelectWidget';
 
 interface DynamicK8sFormProps {
   nodeData: K8sNodeData;
+  nodeId?: string;
 }
 
 const widgets = {
@@ -20,12 +21,17 @@ const widgets = {
   MultiSelectWidget,
 };
 
-const DynamicK8sForm: React.FC<DynamicK8sFormProps> = ({ nodeData }) => {
+const DynamicK8sForm: React.FC<DynamicK8sFormProps> = ({ nodeData, nodeId }) => {
   const handleChange = useCallback((data: any) => {
-    if (data.formData) {
-      nodeData.resource = data.formData;
+    if (data.formData && nodeId) {
+      // Use updateResource if available, otherwise fallback to direct assignment
+      if ((nodeData as any).updateResource) {
+        (nodeData as any).updateResource(nodeId, data.formData);
+      } else {
+        nodeData.resource = data.formData;
+      }
     }
-  }, [nodeData]);
+  }, [nodeData, nodeId]);
 
   return (
     <div className="rjsf space-y-3">
@@ -36,6 +42,7 @@ const DynamicK8sForm: React.FC<DynamicK8sFormProps> = ({ nodeData }) => {
         onChange={handleChange}
         validator={validator}
         widgets={widgets}
+        formContext={{ nodeId }}
         showErrorList={false}
         liveValidate
       >

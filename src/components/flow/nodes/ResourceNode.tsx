@@ -1,4 +1,4 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useMemo } from 'react';
 import { Handle, Position, useReactFlow } from '@xyflow/react';
 import { X, ChevronDown, ChevronUp } from 'lucide-react';
 import DynamicK8sForm  from '../../forms/DynamicK8sForm';
@@ -17,13 +17,36 @@ const ResourceNode: React.FC<ResourceNodeProps> = memo(({ id, data }) => {
     deleteElements({ nodes: [{ id }] });
   };
 
+  // Create source handles for fields that can be referenced
+  const sourceHandles = useMemo(() => {
+    const handles = [];
+    const resource = data.resource as any;
+    
+    if (resource?.metadata?.name) {
+      handles.push({
+        id: `${id}_metadata_name_source`,
+        position: Position.Left,
+        label: 'name',
+        top: 80
+      });
+    }
+    
+    if (resource?.data) {
+      Object.keys(resource.data).forEach((key, index) => {
+        handles.push({
+          id: `${id}_data_${key}_source`,
+          position: Position.Left,
+          label: `data.${key}`,
+          top: 120 + index * 40
+        });
+      });
+    }
+    
+    return handles;
+  }, [id, data.resource]);
+
   return (
     <div className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-4 w-96 ${isFormCollapsed ? 'min-h-[120px]' : 'min-h-[200px]'} relative transition-all duration-300`}>
-      <Handle 
-        type="target" 
-        position={Position.Top} 
-        className="w-3 h-3 bg-blue-500 border-2 border-white dark:border-gray-800"
-      />
       
       <div className="absolute top-2 right-2 flex gap-8">
         <button
@@ -51,13 +74,26 @@ const ResourceNode: React.FC<ResourceNodeProps> = memo(({ id, data }) => {
         </p>
       </div>
       
-      {!isFormCollapsed && <DynamicK8sForm nodeData={data} />}
+      {/* Source Handles - Green dots on the left */}
+      {sourceHandles.map((handle) => (
+        <React.Fragment key={handle.id}>
+          <Handle
+            type="source"
+            position={handle.position}
+            id={handle.id}
+            style={{ top: `${handle.top}px` }}
+            className="!w-3 !h-3 !bg-green-500 !border-2 !border-white"
+          />
+          <div 
+            className="absolute left-4 text-xs text-gray-600 dark:text-gray-400 pointer-events-none"
+            style={{ top: `${handle.top - 6}px` }}
+          >
+            {handle.label}
+          </div>
+        </React.Fragment>
+      ))}
       
-      <Handle 
-        type="source" 
-        position={Position.Bottom} 
-        className="w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800"
-      />
+      {!isFormCollapsed && <DynamicK8sForm nodeData={data} nodeId={id} />}
     </div>
   );
 });

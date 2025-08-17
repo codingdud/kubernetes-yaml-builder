@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { type WidgetProps } from '@rjsf/utils';
 import { Button } from '../../ui/button';
-import { Plus, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import KeyValuePair from './KeyValuePair';
 
-const KeyValueWidget: React.FC<WidgetProps> = ({ value = {}, onChange }) => {
+const KeyValueWidget: React.FC<WidgetProps> = ({ value = {}, onChange, id, formContext }) => {
   const [pairs, setPairs] = useState<Array<{ key: string; value: string }>>(
     Object.entries(value).map(([key, val]) => ({ key, value: val as string }))
   );
@@ -40,31 +41,15 @@ const KeyValueWidget: React.FC<WidgetProps> = ({ value = {}, onChange }) => {
   return (
     <div className="space-y-2">
       {pairs.map((pair, index) => (
-        <div key={index} className="flex gap-2 items-center">
-          <input
-            type="text"
-            placeholder="Key"
-            value={pair.key}
-            onChange={(e) => updatePair(index, 'key', e.target.value)}
-            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          <input
-            type="text"
-            placeholder="Value"
-            value={pair.value}
-            onChange={(e) => updatePair(index, 'value', e.target.value)}
-            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          <Button
-            type="button"
-            variant="destructive"
-            size="icon"
-            onClick={() => removePair(index)}
-            className="h-8 w-8 flex-shrink-0"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
+        <KeyValuePair
+          key={index}
+          index={index}
+          pair={pair}
+          onUpdate={updatePair}
+          onRemove={() => removePair(index)}
+          formContext={formContext}
+          widgetId={id}
+        />
       ))}
       <Button
         type="button"

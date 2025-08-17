@@ -5,7 +5,10 @@ import { type K8sNode } from '../../types/reactFlow';
 import Sidebar from './Sidebar';
 import resourceRegistry from '../../config/resourceRegistry';
 import { useDnD } from './DnDContext';
+import DataEdge from './edges/DataEdge';
 import * as yaml from 'js-yaml';
+
+
 
 const FlowEditorInner: React.FC = () => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
@@ -31,7 +34,28 @@ const FlowEditorInner: React.FC = () => {
     ), []
   );
 
-  const onConnect = useCallback((params: Connection) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
+  const edgeTypes = useMemo(() => ({
+    dataEdge: DataEdge
+  }), []);
+
+  const onConnect = useCallback((connection: Connection) => {
+    // Extract field names from handle IDs
+    const sourceField = connection.sourceHandle?.replace(`${connection.source}_`, '').replace('_source', '') || 'source';
+    const targetField = connection.targetHandle?.replace(`${connection.target}_`, '').replace('_target', '') || 'target';
+    
+    const newEdge = {
+      ...connection,
+      id: `${connection.source}-${connection.target}-${Date.now()}`,
+      type: 'dataEdge' as const,
+      animated: true,
+      data: {
+        label: `${sourceField} → ${targetField}`
+      }
+    } as const;
+    setEdges((eds) => addEdge(newEdge as Edge, eds));
+  }, [setEdges]);
+
+
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
@@ -62,7 +86,11 @@ const FlowEditorInner: React.FC = () => {
       id: `${nextId}`,
       type: kind.toLowerCase(),
       position: position || { x: Math.random() * 500, y: Math.random() * 500 },
-      data: { resource: { ...defaultResource }, schema: schema as any, uiSchema },
+      data: { 
+        resource: { ...defaultResource }, 
+        schema: schema as any, 
+        uiSchema
+      }
     };
     setNodes((nds) => [...nds, newNode]);
     setNextId(nextId + 1);
@@ -92,8 +120,24 @@ const FlowEditorInner: React.FC = () => {
           onDrop={onDrop}
           onDragOver={onDragOver}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           fitView
         >
+          <defs>
+            <marker
+              id="arrowhead"
+              markerWidth="10"
+              markerHeight="7"
+              refX="9"
+              refY="3.5"
+              orient="auto"
+            >
+              <polygon
+                points="0 0, 10 3.5, 0 7"
+                fill="#3b82f6"
+              />
+            </marker>
+          </defs>
           <MiniMap />
           <Controls />
           <Background />
