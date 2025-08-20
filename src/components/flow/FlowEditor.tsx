@@ -62,6 +62,25 @@ const FlowEditorInner: React.FC = () => {
     event.dataTransfer.dropEffect = 'move';
   }, []);
 
+  const addNode = useCallback(
+    (kind: keyof typeof resourceRegistry, position?: { x: number; y: number }) => {
+      const { schema, uiSchema, defaultResource } = resourceRegistry[kind];
+      const newNode: K8sNode = {
+        id: `${nextId}`,
+        type: kind.toLowerCase(),
+        position: position || { x: Math.random() * 500, y: Math.random() * 500 },
+        data: { 
+          resource: { ...defaultResource }, 
+          schema: schema as Record<string, unknown>, 
+          uiSchema
+        }
+      };
+      setNodes((nds) => [...nds, newNode]);
+      setNextId(nextId + 1);
+    },
+    [nextId, setNodes, setNextId]
+  );
+
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
@@ -77,24 +96,8 @@ const FlowEditorInner: React.FC = () => {
 
       addNode(type as keyof typeof resourceRegistry, position);
     },
-    [screenToFlowPosition, type]
+    [screenToFlowPosition, type, addNode]
   );
-
-  const addNode = (kind: keyof typeof resourceRegistry, position?: { x: number; y: number }) => {
-    const { schema, uiSchema, defaultResource } = resourceRegistry[kind];
-    const newNode: K8sNode = {
-      id: `${nextId}`,
-      type: kind.toLowerCase(),
-      position: position || { x: Math.random() * 500, y: Math.random() * 500 },
-      data: { 
-        resource: { ...defaultResource }, 
-        schema: schema as any, 
-        uiSchema
-      }
-    };
-    setNodes((nds) => [...nds, newNode]);
-    setNextId(nextId + 1);
-  };
 
   const generateYAML = () => {
     if (nodes.length === 0) return '';
@@ -123,21 +126,6 @@ const FlowEditorInner: React.FC = () => {
           edgeTypes={edgeTypes}
           fitView
         >
-          <defs>
-            <marker
-              id="arrowhead"
-              markerWidth="10"
-              markerHeight="7"
-              refX="9"
-              refY="3.5"
-              orient="auto"
-            >
-              <polygon
-                points="0 0, 10 3.5, 0 7"
-                fill="#3b82f6"
-              />
-            </marker>
-          </defs>
           <MiniMap />
           <Controls />
           <Background />
