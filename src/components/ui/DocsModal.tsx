@@ -11,7 +11,7 @@ interface DocsModalProps {
 const DocsModal: React.FC<DocsModalProps> = ({ isOpen, onClose }) => {
   return (
     <div
-      className={`fixed top-0 left-0 h-full w-1/3 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shadow-xl z-40 overflow-hidden transform transition-transform duration-300 ${
+      className={`fixed top-0 left-0 h-full w-1/3 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shadow-xl z-[100] overflow-hidden transform transition-transform duration-300 ${
         isOpen ? "translate-x-0" : "-translate-x-full"
       }`}
     >

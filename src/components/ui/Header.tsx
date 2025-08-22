@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Sun, Moon, Monitor, Wrench, BookOpen, Github, User } from "lucide-react";
-import DocsModal from "./DocsModal";
-import ToolsModal from "./ToolsModal";
+import { Sun, Moon, Monitor, Github, User } from "lucide-react";
 
 type Theme = "light" | "dark" | "system";
 
@@ -9,8 +7,6 @@ const Header: React.FC = () => {
   const [theme, setTheme] = useState<Theme>(
     () => (localStorage.getItem("theme") as Theme) || "system"
   );
-  const [isDocsOpen, setIsDocsOpen] = useState(false);
-  const [isToolsOpen, setIsToolsOpen] = useState(false);
 
   useEffect(() => {
     const applyTheme = () => {
@@ -80,22 +76,6 @@ const Header: React.FC = () => {
         </a>
 
         <button
-          onClick={() => setIsToolsOpen(true)}
-          className="p-1.5 rounded-md bg-blue-500 dark:bg-gray-700 hover:bg-blue-400 dark:hover:bg-gray-600 transition-colors"
-          title="Tools"
-        >
-          <Wrench className="h-4 w-4" />
-        </button>
-
-        <button
-          onClick={() => setIsDocsOpen(true)}
-          className="p-1.5 rounded-md bg-blue-500 dark:bg-gray-700 hover:bg-blue-400 dark:hover:bg-gray-600 transition-colors"
-          title="Docs"
-        >
-          <BookOpen className="h-4 w-4" />
-        </button>
-
-        <button
           onClick={cycleTheme}
           className="p-1.5 rounded-md bg-blue-500 dark:bg-gray-700 hover:bg-blue-400 dark:hover:bg-gray-600 transition-colors"
           aria-label={`Current theme: ${theme}. Click to cycle themes`}
@@ -104,9 +84,6 @@ const Header: React.FC = () => {
           {getThemeIcon()}
         </button>
       </div>
-
-      <DocsModal isOpen={isDocsOpen} onClose={() => setIsDocsOpen(false)} />
-      <ToolsModal isOpen={isToolsOpen} onClose={() => setIsToolsOpen(false)} />
     </header>
   );
 };
