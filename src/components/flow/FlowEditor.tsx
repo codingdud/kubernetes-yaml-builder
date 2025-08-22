@@ -136,6 +136,10 @@ const FlowEditorInner: React.FC = () => {
           edgeTypes={edgeTypes}
           connectionMode={ConnectionMode.Loose}
           connectionRadius={50}
+          minZoom={0.1}
+          maxZoom={4}
+          zoomOnScroll={true}
+          zoomOnPinch={true}
           fitView
         >
           <Toolbar

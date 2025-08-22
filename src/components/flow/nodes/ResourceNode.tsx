@@ -74,6 +74,22 @@ const ResourceNode: React.FC<ResourceNodeProps> = memo(({ id, data }) => {
         </p>
       </div>
       
+      {/* Right side static handle */}
+      <Handle
+        type="source"
+        position={Position.Right}
+        id={`${id}_right_source`}
+        className="!w-3 !h-3 !bg-green-500 !border-2 !border-white"
+        style={{ top: '40px' }}
+      />
+      {/* Left side static handle */}
+      <Handle
+        type="target"
+        position={Position.Left}
+        id={`${id}_left_target`}
+        className="!w-3 !h-3 !bg-blue-500 !border-2 !border-white"
+        style={{ top: '40px' }}
+      />
       {/* Source Handles - Green dots on the left */}
       {sourceHandles.map((handle) => (
         <React.Fragment key={handle.id}>
