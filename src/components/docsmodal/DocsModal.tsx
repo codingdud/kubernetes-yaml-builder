@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button"; // Import Button component
+import { Button } from "../ui/button";
 import yamlExamples from "../../data/yamlExamples.json";
+import { type YamlExamples } from "../../types/yamlExamples"; // Import the new type
 
 interface DocsModalProps {
   isOpen: boolean;
@@ -10,7 +11,8 @@ interface DocsModalProps {
 }
 
 const DocsModal: React.FC<DocsModalProps> = ({ isOpen, onClose }) => {
-  const resourceTypes = Object.keys(yamlExamples);
+  const typedYamlExamples: YamlExamples = yamlExamples; // Type assertion
+  const resourceTypes = Object.keys(typedYamlExamples);
   const [selectedResourceType, setSelectedResourceType] = useState<string | null>(resourceTypes[0] || null);
 
   return (
@@ -48,16 +50,16 @@ const DocsModal: React.FC<DocsModalProps> = ({ isOpen, onClose }) => {
 
         {/* Main content for examples */}
         <div className="w-3/4 p-4 overflow-y-auto">
-          {selectedResourceType && yamlExamples[selectedResourceType] && (
+          {selectedResourceType && typedYamlExamples[selectedResourceType] && (
             <div className="space-y-4">
-              {Object.entries(yamlExamples[selectedResourceType]).map(([exampleName, yamlContent]) => (
+              {Object.entries(typedYamlExamples[selectedResourceType]).map(([exampleName, yamlContent]) => (
                 <Card key={exampleName}>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base">{exampleName}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <pre className="bg-muted p-3 rounded-md overflow-x-auto text-xs font-mono">
-                      <code>{yamlContent}</code>
+                      <code>{yamlContent as string}</code> {/* Cast to string */}
                     </pre>
                   </CardContent>
                 </Card>
