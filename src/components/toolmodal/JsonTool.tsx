@@ -3,7 +3,7 @@ import { Copy, Check } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Textarea } from "../ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"; // Import Tabs components
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import * as yaml from 'js-yaml';
 
 const JsonTool: React.FC = () => {
@@ -12,6 +12,8 @@ const JsonTool: React.FC = () => {
 
   const [yamlInput, setYamlInput] = useState("");
   const [jsonOutputFromYaml, setJsonOutputFromYaml] = useState("");
+
+  const [copiedField, setCopiedField] = useState<string | null>(null); // New state for copy feedback
 
   const handleJsonToYamlConvert = () => {
     try {
@@ -31,8 +33,10 @@ const JsonTool: React.FC = () => {
     }
   };
 
-  const copyToClipboard = (text: string) => {
+  const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 1500);
   };
 
   return (
@@ -67,11 +71,11 @@ const JsonTool: React.FC = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => copyToClipboard(yamlOutput)}
+                    onClick={() => copyToClipboard(yamlOutput, "yamlOutput")}
                     className="h-8 px-2"
                   >
-                    <Copy className="h-4 w-4" />
-                    Copy
+                    {copiedField === "yamlOutput" ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                    {copiedField === "yamlOutput" ? "Copied!" : "Copy"}
                   </Button>
                 )}
               </div>
@@ -104,11 +108,11 @@ const JsonTool: React.FC = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => copyToClipboard(jsonOutputFromYaml)}
+                    onClick={() => copyToClipboard(jsonOutputFromYaml, "jsonOutputFromYaml")}
                     className="h-8 px-2"
                   >
-                    <Copy className="h-4 w-4" />
-                    Copy
+                    {copiedField === "jsonOutputFromYaml" ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                    {copiedField === "jsonOutputFromYaml" ? "Copied!" : "Copy"}
                   </Button>
                 )}
               </div>
@@ -124,6 +128,5 @@ const JsonTool: React.FC = () => {
       </CardContent>
     </Card>
   );
-};
-
+};
 export default JsonTool;
