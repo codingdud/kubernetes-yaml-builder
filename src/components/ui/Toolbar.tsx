@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LucideWrench, LucideBookOpen, LucideChevronDown, LucidePlus } from 'lucide-react';
+import { LucideWrench, LucideBookOpen, LucideChevronDown, LucidePlus, Save, RotateCcw, Download, Upload } from 'lucide-react';
 import resourceRegistry from '../../config/resourceRegistry';
 import { Button } from './button';
 
@@ -8,6 +8,10 @@ interface ToolbarProps {
   onDragStart: (event: React.DragEvent, kind: string) => void;
   onOpenTools: () => void;
   onOpenDocs: () => void;
+  onSave?: () => void;
+  onRestore?: () => void;
+  onExportFlow?: () => void;
+  onImportFlow?: (jsonString: string) => void;
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({
@@ -15,6 +19,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onDragStart,
   onOpenTools: onToggleTools,
   onOpenDocs: onToggleDocs,
+  onSave,
+  onRestore,
+  onExportFlow,
+  onImportFlow,
 }) => {
   const [isResourcesOpen, setIsResourcesOpen] = useState(false);
 
@@ -29,7 +37,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       <div className="relative">
         <Button
           variant="secondary"
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
           onClick={() => setIsResourcesOpen(!isResourcesOpen)}
         >
           <LucidePlus className="h-4 w-4" />
@@ -50,7 +58,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                       <Button
                         key={resource}
                         variant="ghost"
-                        className="w-full justify-start text-sm"
+                        className="w-full justify-start text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         onDragStart={(e) => {
                           onDragStart(e, resource);
                           setIsResourcesOpen(false);
@@ -78,7 +86,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         variant="ghost"
         size="icon"
         onClick={onToggleTools}
-        className="p-2"
+        className="p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
         title="Tools"
       >
         <LucideWrench className="h-4 w-4" />
@@ -88,11 +96,81 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         variant="ghost"
         size="icon"
         onClick={onToggleDocs}
-        className="p-2"
+        className="p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
         title="Documentation"
       >
         <LucideBookOpen className="h-4 w-4" />
       </Button>
+
+      {onSave && onRestore && (
+        <>
+          <div className="h-6 w-px bg-gray-200 dark:bg-gray-700" />
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onSave}
+            className="p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            title="Save Flow"
+          >
+            <Save className="h-4 w-4" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onRestore}
+            className="p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            title="Restore Flow"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+        </>
+      )}
+
+      {onExportFlow && onImportFlow && (
+        <>
+          <div className="h-6 w-px bg-gray-200 dark:bg-gray-700" />
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onExportFlow}
+            className="p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            title="Export Flow"
+          >
+            <Download className="h-4 w-4" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.accept = '.json';
+              input.onchange = (e) => {
+                const file = (e.target as HTMLInputElement).files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = (e) => {
+                    const content = e.target?.result;
+                    if (typeof content === 'string') {
+                      onImportFlow(content);
+                    }
+                  };
+                  reader.readAsText(file);
+                }
+              };
+              input.click();
+            }}
+            className="p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            title="Import Flow"
+          >
+            <Upload className="h-4 w-4" />
+          </Button>
+        </>
+      )}
     </div>
   );
 };
