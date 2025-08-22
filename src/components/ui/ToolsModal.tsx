@@ -37,7 +37,7 @@ const ToolsModal: React.FC<ToolsModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <div
-      className={`fixed top-0 left-0 h-full w-2/7 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shadow-xl z-40 transform transition-transform duration-300 ${
+      className={`fixed top-0 left-0 h-full w-2/7 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shadow-xl z-[100] transform transition-transform duration-300 ${
         isOpen ? "translate-x-0" : "-translate-x-full"
       }`}
     >

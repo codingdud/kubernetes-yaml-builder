@@ -1,11 +1,14 @@
 import React, { useCallback, useState, useMemo, useRef } from 'react';
-import { ReactFlow, useNodesState, useEdgesState, addEdge, MiniMap, Controls, Background, type Connection, type Edge, ReactFlowProvider, useReactFlow, type Node, type NodeProps } from '@xyflow/react';
+import { ReactFlow, useNodesState, useEdgesState, addEdge, MiniMap, Controls, Background, type Connection, type Edge, ReactFlowProvider, useReactFlow, type Node, type NodeProps, ConnectionMode } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { type K8sNode } from '../../types/reactFlow';
 import Sidebar from './Sidebar';
 import resourceRegistry from '../../config/resourceRegistry';
 import { useDnD } from './DnDContext';
 import DataEdge from './edges/DataEdge';
+import { Toolbar } from '../ui/Toolbar';
+import DocsModal from '../ui/DocsModal';
+import ToolsModal from '../ui/ToolsModal';
 import * as yaml from 'js-yaml';
 
 
@@ -16,8 +19,10 @@ const FlowEditorInner: React.FC = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [nextId, setNextId] = useState(1);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isToolsOpen, setIsToolsOpen] = useState(false);
+  const [isDocsOpen, setIsDocsOpen] = useState(false);
   const { screenToFlowPosition } = useReactFlow();
-  const { type } = useDnD();
+  const { type, setType } = useDnD();
 
   const nodeTypes = useMemo(() => 
     Object.fromEntries(
@@ -81,6 +86,11 @@ const FlowEditorInner: React.FC = () => {
     [nextId, setNodes, setNextId]
   );
 
+  const onDragStartFromToolbar = (event: React.DragEvent, kind: string) => {
+    event.dataTransfer.setData('application/reactflow', kind);
+    setType(kind as keyof typeof resourceRegistry);
+  };
+
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
@@ -124,8 +134,16 @@ const FlowEditorInner: React.FC = () => {
           onDragOver={onDragOver}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
+          connectionMode={ConnectionMode.Loose}
+          connectionRadius={50}
           fitView
         >
+          <Toolbar
+            onAddNode={(kind) => addNode(kind as keyof typeof resourceRegistry)}
+            onDragStart={onDragStartFromToolbar}
+            onOpenTools={() => setIsToolsOpen(!isToolsOpen)}
+            onOpenDocs={() => setIsDocsOpen(!isDocsOpen)}
+          />
           <MiniMap />
           <Controls />
           <Background />
@@ -136,6 +154,8 @@ const FlowEditorInner: React.FC = () => {
         yaml={generateYAML()} 
         onCollapseChange={setIsSidebarCollapsed}
       />
+      <DocsModal isOpen={isDocsOpen} onClose={() => setIsDocsOpen(false)} />
+      <ToolsModal isOpen={isToolsOpen} onClose={() => setIsToolsOpen(false)} />
     </div>
   );
 };
