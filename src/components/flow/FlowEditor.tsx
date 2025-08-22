@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useMemo, useRef } from 'react';
-import { ReactFlow, useNodesState, useEdgesState, addEdge, MiniMap, Controls, Background, type Connection, type Edge, ReactFlowProvider, useReactFlow, type Node, type NodeProps, ConnectionMode } from '@xyflow/react';
+import { ReactFlow, useNodesState, useEdgesState, addEdge, MiniMap, Controls, Background, type Connection, type Edge, ReactFlowProvider, useReactFlow, type Node, type NodeProps, ConnectionMode, type ReactFlowInstance } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { type K8sNode } from '../../types/reactFlow';
 import Sidebar from './Sidebar';
@@ -7,8 +7,8 @@ import resourceRegistry from '../../config/resourceRegistry';
 import { useDnD } from './DnDContext';
 import DataEdge from './edges/DataEdge';
 import { Toolbar } from '../ui/Toolbar';
-import DocsModal from '../ui/DocsModal';
-import ToolsModal from '../ui/ToolsModal';
+import DocsModal from '../docsmodal/DocsModal';
+import ToolsModal from '../toolmodal/ToolsModal';
 import * as yaml from 'js-yaml';
 
 
@@ -21,8 +21,79 @@ const FlowEditorInner: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isToolsOpen, setIsToolsOpen] = useState(false);
   const [isDocsOpen, setIsDocsOpen] = useState(false);
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, setViewport } = useReactFlow();
   const { type, setType } = useDnD();
+  const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
+
+  // Export flow to JSON file
+  const onExportFlow = useCallback(() => {
+    if (rfInstance) {
+      const flow = rfInstance.toObject();
+      const blob = new Blob([JSON.stringify(flow, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `kubernetes-flow-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+  }, [rfInstance]);
+
+  // Import flow from JSON file
+  const onImportFlow = useCallback((jsonString: string) => {
+    try {
+      const flow = JSON.parse(jsonString);
+      if (flow.nodes && flow.edges && flow.viewport) {
+        setNodes(flow.nodes);
+        setEdges(flow.edges);
+        setViewport(flow.viewport);
+        
+        // Update nextId to be greater than any existing node id
+        const maxId = Math.max(...flow.nodes.map((n: Node) => 
+          parseInt(n.id.replace(/\D/g, '') || '0')
+        ));
+        setNextId(maxId + 1);
+      }
+    } catch (error) {
+      console.error('Error importing flow:', error);
+      alert('Invalid flow file format');
+    }
+  }, [setNodes, setEdges, setViewport, setNextId]);
+
+  // Save/Restore functionality
+  const onSave = useCallback(() => {
+    if (rfInstance) {
+      const flow = rfInstance.toObject();
+      localStorage.setItem('kubernetes-yaml-flow', JSON.stringify({
+        ...flow,
+        lastSaved: new Date().toISOString()
+      }));
+    }
+  }, [rfInstance]);
+
+  const onRestore = useCallback(() => {
+    try {
+      const stored = localStorage.getItem('kubernetes-yaml-flow');
+      if (stored) {
+        const flow = JSON.parse(stored);
+        const { nodes: storedNodes, edges: storedEdges, viewport } = flow;
+        
+        if (storedNodes) setNodes(storedNodes);
+        if (storedEdges) setEdges(storedEdges);
+        if (viewport) setViewport(viewport);
+        
+        // Update nextId to be greater than any existing node id
+        const maxId = Math.max(...storedNodes.map((n: Node) => 
+          parseInt(n.id.replace(/\D/g, '') || '0')
+        ));
+        setNextId(maxId + 1);
+      }
+    } catch (error) {
+      console.error('Error restoring flow:', error);
+    }
+  }, [setNodes, setEdges, setViewport, setNextId]);
 
   const nodeTypes = useMemo(() => 
     Object.fromEntries(
@@ -140,6 +211,7 @@ const FlowEditorInner: React.FC = () => {
           maxZoom={4}
           zoomOnScroll={true}
           zoomOnPinch={true}
+          onInit={setRfInstance}
           fitView
         >
           <Toolbar
@@ -147,6 +219,10 @@ const FlowEditorInner: React.FC = () => {
             onDragStart={onDragStartFromToolbar}
             onOpenTools={() => setIsToolsOpen(!isToolsOpen)}
             onOpenDocs={() => setIsDocsOpen(!isDocsOpen)}
+            onSave={onSave}
+            onRestore={onRestore}
+            onExportFlow={onExportFlow}
+            onImportFlow={onImportFlow}
           />
           <MiniMap />
           <Controls />

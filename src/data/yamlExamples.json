@@ -1,11 +1,39 @@
 {
-  "Deployment": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: nginx-deployment\n  labels:\n    app: nginx\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: nginx\n  template:\n    metadata:\n      labels:\n        app: nginx\n    spec:\n      containers:\n      - name: nginx\n        image: nginx:1.14.2\n        ports:\n        - containerPort: 80",
-  "Service": "apiVersion: v1\nkind: Service\nmetadata:\n  name: nginx-service\nspec:\n  selector:\n    app: nginx\n  ports:\n    - protocol: TCP\n      port: 80\n      targetPort: 80\n  type: ClusterIP",
-  "ConfigMap": "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: app-config\ndata:\n  database_url: \"postgresql://localhost:5432/mydb\"\n  debug: \"true\"\n  max_connections: \"100\"",
-  "Secret": "apiVersion: v1\nkind: Secret\nmetadata:\n  name: mysecret\ntype: Opaque\ndata:\n  username: YWRtaW4=\n  password: MWYyZDFlMmU2N2Rm",
-  "StatefulSet": "apiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: web\nspec:\n  selector:\n    matchLabels:\n      app: nginx\n  serviceName: \"nginx\"\n  replicas: 3\n  template:\n    metadata:\n      labels:\n        app: nginx\n    spec:\n      containers:\n      - name: nginx\n        image: nginx:1.14.2\n        ports:\n        - containerPort: 80",
-  "DaemonSet": "apiVersion: apps/v1\nkind: DaemonSet\nmetadata:\n  name: fluentd-elasticsearch\nspec:\n  selector:\n    matchLabels:\n      name: fluentd-elasticsearch\n  template:\n    metadata:\n      labels:\n        name: fluentd-elasticsearch\n    spec:\n      containers:\n      - name: fluentd-elasticsearch\n        image: fluentd:v2.5.2",
-  "Job": "apiVersion: batch/v1\nkind: Job\nmetadata:\n  name: pi\nspec:\n  template:\n    spec:\n      containers:\n      - name: pi\n        image: perl:5.34.0\n        command: [\"perl\", \"-Mbignum=bpi\", \"-wle\", \"print bpi(2000)\"]\n      restartPolicy: Never\n  backoffLimit: 4",
-  "CronJob": "apiVersion: batch/v1\nkind: CronJob\nmetadata:\n  name: hello\nspec:\n  schedule: \"* * * * *\"\n  jobTemplate:\n    spec:\n      template:\n        spec:\n          containers:\n          - name: hello\n            image: busybox:1.28\n            command:\n            - /bin/sh\n            - -c\n            - date; echo Hello from the Kubernetes cluster\n          restartPolicy: OnFailure",
-  "Ingress": "apiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: minimal-ingress\nspec:\n  ingressClassName: nginx-example\n  rules:\n  - http:\n      paths:\n      - path: /testpath\n        pathType: Prefix\n        backend:\n          service:\n            name: test\n            port:\n              number: 80"
+  "Deployment": {
+    "Basic Nginx Deployment": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: nginx-deployment\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: nginx\n  template:\n    metadata:\n      labels:\n        app: nginx\n    spec:\n      containers:\n      - name: nginx-container\n        image: nginx:latest\n        ports:\n        - containerPort: 80",
+    "Deployment with Environment Variables": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: my-app-deployment\nspec:\n  replicas: 3\n  template:\n    spec:\n      containers:\n      - name: my-app-container\n        image: my-app-image\n        ports:\n        - containerPort: 80\n        env:\n        - name: DATABASE_HOST\n          value: db.example.com\n        - name: API_KEY\n          valueFrom:\n            secretKeyRef:\n              name: my-secret\n              key: api-key",
+    "Scaled Nginx Deployment": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: example-deployment\nspec:\n  replicas: 10\n  selector:\n    matchLabels:\n      app: example\n  template:\n    metadata:\n      labels:\n        app: example\n    spec:\n      containers:\n      - name: example-container\n        image: nginx:latest\n        ports:\n        - containerPort: 80",
+    "Deployment with Resource Limits": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: nginx-deployment\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: nginx\n  template:\n    metadata:\n      labels:\n        app: nginx\n    spec:\n      containers:\n      - name: nginx\n        image: nginx:latest\n        ports:\n        - containerPort: 80\n        resources:\n          limits:\n            memory: \"256Mi\"\n            cpu: \"200m\"\n          requests:\n            memory: \"128Mi\"\n            cpu: \"100m\"",
+    "Deployment with Liveness and Readiness Probes": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: nginx-deployment\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: nginx\n  template:\n    metadata:\n      labels:\n        app: nginx\n    spec:\n      containers:\n      - name: nginx\n        image: nginx:latest\n        ports:\n        - containerPort: 80\n        livenessProbe:\n          httpGet:\n            path: /\n            port: 80\n          initialDelaySeconds: 15\n          periodSeconds: 10\n        readinessProbe:\n          httpGet:\n            path: /\n            port: 80\n          initialDelaySeconds: 5\n          periodSeconds: 5"
+  },
+  "Service": {
+    "ClusterIP Service": "apiVersion: v1\nkind: Service\nmetadata:\n  name: nginx-clusterip\nspec:\n  type: ClusterIP\n  selector:\n    run: app-nginx\n  ports:\n  - port: 80\n    protocol: TCP",
+    "NodePort Service": "apiVersion: v1\nkind: Service\nmetadata:\n  name: nginx-nodeport\nspec:\n  type: NodePort\n  selector:\n    run: app-nginx\n  ports:\n  - nodePort: 30001\n    port: 80\n    targetPort: 80",
+    "LoadBalancer Service": "apiVersion: v1\nkind: Service\nmetadata:\n  name: nginx-load-balancer\nspec:\n  type: LoadBalancer\n  selector:\n    run: app-nginx\n  ports:\n  - port: 80\n    targetPort: 80"
+  },
+  "ConfigMap": {
+    "Basic ConfigMap": "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: demo-config\ndata:\n  database_host: \"192.168.0.1\"\n  debug_mode: \"1\"\n  log_level: \"verbose\"",
+    "ConfigMap with Binary Data": "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: demo-config\nbinaryData:\n  file_template: RGVtbwo=",
+    "Immutable ConfigMap": "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: demo-config-immutable\ndata:\n  foo: bar\nimmutable: true"
+  },
+  "Secret": {
+    "Opaque Secret": "apiVersion: v1\nkind: Secret\nmetadata:\n  name: mysecret\ntype: Opaque\ndata:\n  username: YWRtaW4=\n  password: MWYyZDFlMmU2N2Rm"
+  },
+  "StatefulSet": {
+    "Simple StatefulSet": "apiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: web\nspec:\n  selector:\n    matchLabels:\n      app: nginx\n  serviceName: \"nginx\"\n  replicas: 3\n  template:\n    metadata:\n      labels:\n        app: nginx\n    spec:\n      containers:\n      - name: nginx\n        image: nginx:1.14.2\n        ports:\n        - containerPort: 80"
+  },
+  "DaemonSet": {
+    "Fluentd DaemonSet": "apiVersion: apps/v1\nkind: DaemonSet\nmetadata:\n  name: fluentd-elasticsearch\nspec:\n  selector:\n    matchLabels:\n      name: fluentd-elasticsearch\n  template:\n    metadata:\n      labels:\n        name: fluentd-elasticsearch\n    spec:\n      containers:\n      - name: fluentd-elasticsearch\n        image: fluentd:v2.5.2"
+  },
+  "Job": {
+    "Pi Calculation Job": "apiVersion: batch/v1\nkind: Job\nmetadata:\n  name: pi\nspec:\n  template:\n    spec:\n      containers:\n      - name: pi\n        image: perl:5.34.0\n        command: [\"perl\", \"-Mbignum=bpi\", \"-wle\", \"print bpi(2000)\"]\n      restartPolicy: Never\n  backoffLimit: 4"
+  },
+  "CronJob": {
+    "Hello CronJob": "apiVersion: batch/v1\nkind: CronJob\nmetadata:\n  name: hello\nspec:\n  schedule: \"* * * * *\"\n  jobTemplate:\n    spec:\n      template:\n        spec:\n          containers:\n          - name: hello\n            image: busybox:1.28\n            command:\n            - /bin/sh\n            - -c\n            - date; echo Hello from the Kubernetes cluster\n          restartPolicy: OnFailure"
+  },
+  "Ingress": {
+    "Minimal Ingress": "apiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: minimal-ingress\nspec:\n  ingressClassName: nginx-example\n  rules:\n  - http:\n      paths:\n      - path: /testpath\n        pathType: Prefix\n        backend:\n          service:\n            name: test\n            port:\n              number: 80",
+    "Path-based Ingress (AKS Hello World)": "apiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: hello-world-ingress\n  annotations:\n    nginx.ingress.kubernetes.io/ssl-redirect: \"false\"\n    nginx.ingress.kubernetes.io/use-regex: \"true\"\n    nginx.ingress.kubernetes.io/rewrite-target: /%242\nspec:\n  ingressClassName: nginx\n  rules:\n  - http:\n      paths:\n      - path: /hello-world-one(/|$)(.*)\n        pathType: Prefix\n        backend:\n          service:\n            name: aks-helloworld-one\n            port:\n              number: 80\n      - path: /hello-world-two(/|$)(.*)\n        pathType: Prefix\n        backend:\n          service:\n            name: aks-helloworld-two\n            port:\n              number: 80\n      - path: /(.*)\n        pathType: Prefix\n        backend:\n          service:\n            name: aks-helloworld-one\n            port:\n              number: 80",
+    "Simple Host-based Ingress": "apiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: example-ingress\nspec:\n  rules:\n  - host: nginx-hello.info\n    http:\n      paths:\n      - pathType: Prefix\n        path: \"/\"\n        backend:\n          service:\n            name: nginx\n            port:\n              number: 80"
+  }
 }
