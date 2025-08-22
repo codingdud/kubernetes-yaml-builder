@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Wrench, BookOpen, ChevronDown, Plus } from 'lucide-react';
+import { LucideWrench, LucideBookOpen, LucideChevronDown, LucidePlus } from 'lucide-react';
 import resourceRegistry from '../../config/resourceRegistry';
 import { Button } from './button';
 
@@ -32,9 +32,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           className="flex items-center gap-2"
           onClick={() => setIsResourcesOpen(!isResourcesOpen)}
         >
-          <Plus className="h-4 w-4" />
+          <LucidePlus className="h-4 w-4" />
           Add Resource
-          <ChevronDown className="h-4 w-4" />
+          <LucideChevronDown className="h-4 w-4" />
         </Button>
 
         {isResourcesOpen && (
@@ -46,7 +46,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                 </h3>
                 <div className="space-y-1">
                   {resources.map((resource) => (
-                    resourceRegistry[resource] && (
+                    resourceRegistry[resource as keyof typeof resourceRegistry] && (
                       <Button
                         key={resource}
                         variant="ghost"
@@ -81,7 +81,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         className="p-2"
         title="Tools"
       >
-        <Wrench className="h-4 w-4" />
+        <LucideWrench className="h-4 w-4" />
       </Button>
 
       <Button
@@ -91,7 +91,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         className="p-2"
         title="Documentation"
       >
-        <BookOpen className="h-4 w-4" />
+        <LucideBookOpen className="h-4 w-4" />
       </Button>
     </div>
   );
