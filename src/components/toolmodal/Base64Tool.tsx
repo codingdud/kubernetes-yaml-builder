@@ -3,22 +3,23 @@ import { Copy, Check } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Textarea } from "../ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
 const Base64Tool: React.FC = () => {
-  const [base64Input, setBase64Input] = useState("");
-  const [base64Output, setBase64Output] = useState("");
-  const [base64Mode, setBase64Mode] = useState<"encode" | "decode">("encode");
+  const [input, setInput] = useState("");
+  const [output, setOutput] = useState("");
+  const [activeTab, setActiveTab] = useState<"encode" | "decode">("encode");
   const [copied, setCopied] = useState(false);
 
-  const handleBase64Convert = () => {
+  const handleConvert = () => {
     try {
-      if (base64Mode === "encode") {
-        setBase64Output(btoa(base64Input));
+      if (activeTab === "encode") {
+        setOutput(btoa(input));
       } else {
-        setBase64Output(atob(base64Input));
+        setOutput(atob(input));
       }
     } catch {
-      setBase64Output("❌ Invalid input for decoding");
+      setOutput("❌ Invalid input for decoding");
     }
   };
 
@@ -34,67 +35,74 @@ const Base64Tool: React.FC = () => {
         <CardTitle className="text-lg">Base64 Encoder/Decoder</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex gap-2">
-          <Button
-            variant={base64Mode === "encode" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setBase64Mode("encode")}
-          >
-            Encode
-          </Button>
-          <Button
-            variant={base64Mode === "decode" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setBase64Mode("decode")}
-          >
-            Decode
-          </Button>
-        </div>
+        <Tabs
+          defaultValue="encode"
+          className="w-full"
+          onValueChange={(val) => {
+            setActiveTab(val as "encode" | "decode");
+            setInput("");
+            setOutput("");
+          }}
+        >
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="encode">Encode</TabsTrigger>
+            <TabsTrigger value="decode">Decode</TabsTrigger>
+          </TabsList>
+          <TabsContent value="encode" className="space-y-4" forceMount>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                Input ({activeTab === "encode" ? "Plain Text" : "Base64"})
+              </label>
+              <Textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={
+                  activeTab === "encode"
+                    ? "Enter text to encode..."
+                    : "Enter base64 to decode..."
+                }
+                rows={4}
+              />
+            </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium">
-            Input ({base64Mode === "encode" ? "Plain Text" : "Base64"})
-          </label>
-          <Textarea
-            value={base64Input}
-            onChange={(e) => setBase64Input(e.target.value)}
-            placeholder={
-              base64Mode === "encode"
-                ? "Enter text to encode..."
-                : "Enter base64 to decode..."
-            }
-            rows={4}
-          />
-        </div>
+            <Button onClick={handleConvert} className="w-full">
+              {activeTab === "encode"
+                ? "Encode to Base64"
+                : "Decode from Base64"}
+            </Button>
 
-        <Button onClick={handleBase64Convert} className="w-full">
-          {base64Mode === "encode" ? "Encode to Base64" : "Decode from Base64"}
-        </Button>
-
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <label className="text-sm font-medium">
-              Output ({base64Mode === "encode" ? "Base64" : "Plain Text"})
-            </label>
-            {base64Output && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => copyToClipboard(base64Output)}
-                className="h-8 px-2"
-              >
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                {copied ? "Copied!" : "Copy"}
-              </Button>
-            )}
-          </div>
-          <Textarea
-            value={base64Output}
-            readOnly
-            placeholder="Output will appear here..."
-            rows={4}
-          />
-        </div>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label className="text-sm font-medium">
+                  Output ({activeTab === "encode" ? "Base64" : "Plain Text"})
+                </label>
+                {output && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard(output)}
+                    className="h-8 px-2"
+                  >
+                    {copied ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                )}
+              </div>
+              <Textarea
+                value={output}
+                readOnly
+                placeholder="Output will appear here..."
+                rows={4}
+              />
+            </div>
+          </TabsContent>
+          <TabsContent value="decode" className="space-y-4" forceMount>
+            {/* Identical to encode tab, shared states handle it */}
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
