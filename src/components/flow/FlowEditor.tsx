@@ -10,8 +10,9 @@ import { Toolbar } from '../ui/Toolbar';
 import DocsModal from '../docsmodal/DocsModal';
 import ToolsModal from '../toolmodal/ToolsModal';
 import * as yaml from 'js-yaml';
-
-
+import { useCommands } from '../../hooks/useCommands';
+import { type Command } from '../../types/command';
+import { Save, RotateCcw, Download, Upload, LucideWrench, LucideBookOpen } from 'lucide-react';
 
 const FlowEditorInner: React.FC = () => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
@@ -25,24 +26,7 @@ const FlowEditorInner: React.FC = () => {
   const { type, setType } = useDnD();
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
 
-  // Export flow to JSON file
-  const onExportFlow = useCallback(() => {
-    if (rfInstance) {
-      const flow = rfInstance.toObject();
-      const blob = new Blob([JSON.stringify(flow, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `kubernetes-flow-${new Date().toISOString().slice(0, 10)}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    }
-  }, [rfInstance]);
-
-  // Import flow from JSON file
-  const onImportFlow = useCallback((jsonString: string) => {
+  const handleImport = useCallback((jsonString: string) => {
     try {
       const flow = JSON.parse(jsonString);
       if (flow.nodes && flow.edges && flow.viewport) {
@@ -50,10 +34,7 @@ const FlowEditorInner: React.FC = () => {
         setEdges(flow.edges);
         setViewport(flow.viewport);
         
-        // Update nextId to be greater than any existing node id
-        const maxId = Math.max(...flow.nodes.map((n: Node) => 
-          parseInt(n.id.replace(/\D/g, '') || '0')
-        ));
+        const maxId = Math.max(...flow.nodes.map((n: Node) => parseInt(n.id.replace(/\D/g, '') || '0')));
         setNextId(maxId + 1);
       }
     } catch (error) {
@@ -62,38 +43,91 @@ const FlowEditorInner: React.FC = () => {
     }
   }, [setNodes, setEdges, setViewport, setNextId]);
 
-  // Save/Restore functionality
-  const onSave = useCallback(() => {
-    if (rfInstance) {
-      const flow = rfInstance.toObject();
-      localStorage.setItem('kubernetes-yaml-flow', JSON.stringify({
-        ...flow,
-        lastSaved: new Date().toISOString()
-      }));
-    }
-  }, [rfInstance]);
-
-  const onRestore = useCallback(() => {
-    try {
-      const stored = localStorage.getItem('kubernetes-yaml-flow');
-      if (stored) {
-        const flow = JSON.parse(stored);
-        const { nodes: storedNodes, edges: storedEdges, viewport } = flow;
-        
-        if (storedNodes) setNodes(storedNodes);
-        if (storedEdges) setEdges(storedEdges);
-        if (viewport) setViewport(viewport);
-        
-        // Update nextId to be greater than any existing node id
-        const maxId = Math.max(...storedNodes.map((n: Node) => 
-          parseInt(n.id.replace(/\D/g, '') || '0')
-        ));
-        setNextId(maxId + 1);
+  const commands: Command[] = useMemo(() => [
+    {
+      id: 'save',
+      label: 'Save Flow',
+      icon: <Save className="h-4 w-4" />,
+      shortcut: ['s'],
+      execute: async () => {
+        if (rfInstance) {
+          const flow = rfInstance.toObject();
+          localStorage.setItem('kubernetes-yaml-flow', JSON.stringify({ ...flow, lastSaved: new Date().toISOString() }));
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
       }
-    } catch (error) {
-      console.error('Error restoring flow:', error);
-    }
-  }, [setNodes, setEdges, setViewport, setNextId]);
+    },
+    {
+      id: 'restore',
+      label: 'Restore Flow',
+      icon: <RotateCcw className="h-4 w-4" />,
+      shortcut: ['r'],
+      execute: async () => {
+        const stored = localStorage.getItem('kubernetes-yaml-flow');
+        if (stored) handleImport(stored);
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    },
+    {
+      id: 'export',
+      label: 'Export Flow',
+      icon: <Download className="h-4 w-4" />,
+      shortcut: ['e'],
+      execute: () => {
+        if (rfInstance) {
+          const flow = rfInstance.toObject();
+          const blob = new Blob([JSON.stringify(flow, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `kubernetes-flow-${new Date().toISOString().slice(0, 10)}.json`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }
+      }
+    },
+    {
+      id: 'import',
+      label: 'Import Flow',
+      icon: <Upload className="h-4 w-4" />,
+      shortcut: ['i'],
+      execute: () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = (e) => {
+          const file = (e.target as HTMLInputElement).files?.[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const content = e.target?.result;
+              if (typeof content === 'string') handleImport(content);
+            };
+            reader.readAsText(file);
+          }
+        };
+        input.click();
+      }
+    },
+    {
+      id: 'toggleTools',
+      label: 'Toggle Tools',
+      icon: <LucideWrench className="h-4 w-4" />,
+      shortcut: ['t'],
+      execute: () => setIsToolsOpen(o => !o),
+    },
+    {
+      id: 'toggleDocs',
+      label: 'Toggle Docs',
+      icon: <LucideBookOpen className="h-4 w-4" />,
+      shortcut: ['d'],
+      execute: () => setIsDocsOpen(o => !o),
+    },
+  ], [rfInstance, handleImport, setIsToolsOpen, setIsDocsOpen]);
+
+  const { executeCommand, executingCommand } = useCommands(commands);
 
   const nodeTypes = useMemo(() => 
     Object.fromEntries(
@@ -115,7 +149,6 @@ const FlowEditorInner: React.FC = () => {
   }), []);
 
   const onConnect = useCallback((connection: Connection) => {
-    // Extract field names from handle IDs
     const sourceField = connection.sourceHandle?.replace(`${connection.source}_`, '').replace('_source', '') || 'source';
     const targetField = connection.targetHandle?.replace(`${connection.target}_`, '').replace('_target', '') || 'target';
     
@@ -131,8 +164,6 @@ const FlowEditorInner: React.FC = () => {
     setEdges((eds) => addEdge(newEdge as Edge, eds));
   }, [setEdges]);
 
-
-
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
@@ -147,7 +178,7 @@ const FlowEditorInner: React.FC = () => {
         position: position || { x: Math.random() * 500, y: Math.random() * 500 },
         data: { 
           resource: { ...defaultResource }, 
-          schema: schema as Record<string, unknown>, 
+          schema: schema as Record<string, unknown>,
           uiSchema
         }
       };
@@ -215,14 +246,11 @@ const FlowEditorInner: React.FC = () => {
           fitView
         >
           <Toolbar
+            commands={commands}
+            executingCommand={executingCommand}
+            executeCommand={executeCommand}
             onAddNode={(kind) => addNode(kind as keyof typeof resourceRegistry)}
             onDragStart={onDragStartFromToolbar}
-            onOpenTools={() => setIsToolsOpen(!isToolsOpen)}
-            onOpenDocs={() => setIsDocsOpen(!isDocsOpen)}
-            onSave={onSave}
-            onRestore={onRestore}
-            onExportFlow={onExportFlow}
-            onImportFlow={onImportFlow}
           />
           <MiniMap />
           <Controls />
