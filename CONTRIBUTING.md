@@ -76,13 +76,162 @@ docs: update installation instructions
 
 ## Adding New Features
 
-### New Kubernetes Resources
-To add a new Kubernetes resource type:
+### Adding New Kubernetes Resources
 
-1. Create the resource schema in `src/config/`
-2. Add the resource to `resourceRegistry.ts`
-3. Update YAML examples in `src/data/yamlExamples.json`
-4. Test the new resource thoroughly
+We welcome contributions for new Kubernetes resources. To add support for a resource like a `PersistentVolumeClaim` or `NetworkPolicy`, follow these steps. This guide will use a `PersistentVolumeClaim` (PVC) as an example.
+
+#### 1. Create the JSON Schema
+
+First, you need a JSON Schema that defines the structure and properties of the Kubernetes resource. The best source for this is the official Kubernetes documentation.
+
+- **Action**: Create a new JSON file in `src/schemas/kubernetes/`.
+- **Example**: Create `src/schemas/kubernetes/persistentvolumeclaim.json`.
+
+This schema should define all the properties, types, and default values for the resource. You can often find stripped-down or community-generated schemas online to use as a starting point.
+
+**Example `persistentvolumeclaim.json`:**
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "enum": ["v1"],
+      "default": "v1"
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["PersistentVolumeClaim"],
+      "default": "PersistentVolumeClaim"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "namespace": { "type": "string" }
+      }
+    },
+    "spec": {
+      "type": "object",
+      "required": ["accessModes", "resources"],
+      "properties": {
+        "accessModes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["ReadWriteOnce", "ReadOnlyMany", "ReadWriteMany"]
+          }
+        },
+        "resources": {
+          "type": "object",
+          "required": ["requests"],
+          "properties": {
+            "requests": {
+              "type": "object",
+              "required": ["storage"],
+              "properties": {
+                "storage": { "type": "string", "default": "1Gi" }
+              }
+            }
+          }
+        },
+        "storageClassName": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
+```
+
+#### 2. Define the UI Schema
+
+The UI Schema controls how the form for the new resource is rendered. It allows you to specify widgets, placeholders, and the order of fields.
+
+- **Action**: Add a new exported `UiSchema` object in `src/schemas/uiSchema.ts`.
+- **Example**: Add `export const persistentvolumeclaimUiSchema: UiSchema = { ... };`
+
+This object mirrors the structure of your JSON schema but provides UI-specific directives.
+
+**Example for PVC in `uiSchema.ts`:**
+```typescript
+export const persistentvolumeclaimUiSchema: UiSchema = {
+  'metadata': {
+    'name': {
+      'ui:widget': 'TextWidget',
+      'ui:placeholder': 'pvc-name'
+    },
+    'namespace': {
+      'ui:widget': 'TextWidget',
+      'ui:placeholder': 'default'
+    }
+  },
+  'spec': {
+    'accessModes': {
+      'ui:widget': 'MultiSelectWidget' // Use a custom multi-select widget
+    },
+    'resources': {
+      'requests': {
+        'storage': {
+          'ui:widget': 'TextWidget',
+          'ui:placeholder': 'e.g., 10Gi or 500Mi'
+        }
+      }
+    },
+    'storageClassName': {
+      'ui:widget': 'TextWidget',
+      'ui:placeholder': 'e.g., standard'
+    }
+  }
+};
+```
+
+#### 3. Register the Resource
+
+The resource registry is the central hub that connects the schema, UI schema, default values, and the visual node component.
+
+- **Action**: Add a new entry to the `resourceRegistry` object in `src/config/resourceRegistry.ts`.
+
+**Example for PVC in `resourceRegistry.ts`:**
+```typescript
+// 1. Import the schema and UI schema
+import persistentvolumeclaimSchema from '../schemas/kubernetes/persistentvolumeclaim.json';
+import { persistentvolumeclaimUiSchema } from '../schemas/uiSchema';
+
+// 2. Add the entry to the registry
+const resourceRegistry = {
+  // ... other resources
+  PersistentVolumeClaim: {
+    schema: persistentvolumeclaimSchema,
+    uiSchema: persistentvolumeclaimUiSchema,
+    NodeComponent: ResourceNode, // Use the generic component for now
+    defaultResource: { 
+      apiVersion: 'v1', 
+      kind: 'PersistentVolumeClaim', 
+      metadata: { name: 'new-pvc' },
+      spec: {
+        accessModes: ['ReadWriteOnce'],
+        resources: { requests: { storage: '1Gi' } }
+      }
+    }
+  },
+  // ... other resources
+};
+```
+
+#### 4. Create the Node Component (Optional)
+
+For most resources, the generic `ResourceNode` component located at `src/components/flow/nodes/ResourceNode.tsx` is sufficient. It displays the resource `kind` and `name`.
+
+If your new resource requires a unique visualization on the canvas (e.g., a different icon, color, or layout), you can create a custom React component for it.
+
+- **Action**: Create a new component file (e.g., `PvcNode.tsx`) and reference it in the `NodeComponent` property in the `resourceRegistry` instead of `ResourceNode`.
+- **Best Practice**: For consistency, it's best to use the `ResourceNode` unless there is a strong reason for a custom design.
+
+After completing these steps, add the new resource to one of the groups in `Toolbar.tsx` to make it accessible from the "Add Resource" menu, and test it thoroughly.
 
 ### New UI Components
 - Place reusable components in `src/components/ui/`

@@ -28,6 +28,7 @@
     "cronstrue": "^3.2.0",
     "date-fns": "^4.1.0",
     "js-yaml": "^4.1.0",
+    "lottie-react": "^2.4.1",
     "lucide-react": "0.541.0",
     "postcss": "^8.5.6",
     "react": "^19.1.1",
