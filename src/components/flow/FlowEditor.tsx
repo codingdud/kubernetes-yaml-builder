@@ -43,6 +43,41 @@ const FlowEditorInner: React.FC = () => {
     }
   }, [setNodes, setEdges, setViewport, setNextId]);
 
+  const handleYamlImport = useCallback((yamlString: string) => {
+    try {
+      const docs = yaml.loadAll(yamlString).filter(d => d) as any[];
+      const newNodes: K8sNode[] = [];
+      let newNextId = 1;
+
+      docs.forEach((doc, index) => {
+        if (doc && doc.kind && doc.metadata) {
+          const kind = doc.kind as keyof typeof resourceRegistry;
+          if (resourceRegistry[kind]) {
+            const { schema, uiSchema, defaultResource } = resourceRegistry[kind];
+            const newNode: K8sNode = {
+              id: `${newNextId++}`,
+              type: kind.toLowerCase(),
+              position: { x: 250 * index, y: 100 },
+              data: {
+                resource: { ...defaultResource, ...doc },
+                schema: schema as Record<string, unknown>,
+                uiSchema,
+              },
+            };
+            newNodes.push(newNode);
+          }
+        }
+      });
+
+      setNodes(newNodes);
+      setEdges([]);
+      setNextId(newNextId);
+    } catch (error) {
+      console.error('Error importing YAML:', error);
+      alert('Invalid YAML format');
+    }
+  }, [setNodes, setEdges, setNextId]);
+
   const commands: Command[] = useMemo(() => [
     {
       id: 'save',
@@ -261,6 +296,7 @@ const FlowEditorInner: React.FC = () => {
         onAddNode={addNode} 
         yaml={generateYAML()} 
         onCollapseChange={setIsSidebarCollapsed}
+        onImportYaml={handleYamlImport}
       />
       <DocsModal isOpen={isDocsOpen} onClose={() => setIsDocsOpen(false)} />
       <ToolsModal isOpen={isToolsOpen} onClose={() => setIsToolsOpen(false)} />

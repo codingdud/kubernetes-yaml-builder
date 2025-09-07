@@ -4,15 +4,19 @@ import { Button } from '../ui/button';
 import CodePreview from '../ui/CodePreview';
 import resourceRegistry from '../../config/resourceRegistry';
 import { useDnD } from './DnDContext';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { Textarea } from '../ui/textarea';
 
 interface SidebarProps {
   onAddNode: (kind: keyof typeof resourceRegistry) => void;
   yaml: string;
   onCollapseChange: (collapsed: boolean) => void;
+  onImportYaml: (yaml: string) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ onAddNode, yaml, onCollapseChange }) => {
+const Sidebar: React.FC<SidebarProps> = ({ onAddNode, yaml, onCollapseChange, onImportYaml }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [yamlInput, setYamlInput] = useState('');
   const { setType } = useDnD();
 
   const toggleCollapse = (collapsed: boolean) => {
@@ -21,7 +25,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddNode, yaml, onCollapseChange }) 
   };
 
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
-    setType(nodeType);
+    setType(nodeType as keyof typeof resourceRegistry);
     event.dataTransfer.effectAllowed = 'move';
   };
 
@@ -70,7 +74,28 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddNode, yaml, onCollapseChange }) 
             ))}
           </div>
         </div>
-        <CodePreview yaml={yaml} />
+        <Tabs defaultValue="generated-yaml" className="h-full">
+          <TabsList>
+            <TabsTrigger value="generated-yaml">Generated YAML</TabsTrigger>
+            <TabsTrigger value="import-yaml">Import YAML</TabsTrigger>
+          </TabsList>
+          <TabsContent value="generated-yaml" className="h-full">
+            <CodePreview yaml={yaml} />
+          </TabsContent>
+          <TabsContent value="import-yaml" className="h-full">
+            <div className="flex flex-col gap-2 h-full">
+              <Textarea 
+                value={yamlInput}
+                onChange={(e) => setYamlInput(e.target.value)}
+                placeholder="Paste your YAML here..."
+                className="h-full"
+              />
+              <Button onClick={() => onImportYaml(yamlInput)} size="sm">
+                Generate Diagram
+              </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
