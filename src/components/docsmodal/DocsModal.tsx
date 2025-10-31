@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { X, Copy, Check } from "lucide-react";
 
 import { Button } from "../ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+
 import yamlExamples from "../../data/yamlExamples.json";
 import { type YamlExamples } from "../../types/yamlExamples";
 
@@ -25,7 +25,7 @@ const DocsModal: React.FC<DocsModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <div
-      className={`fixed top-0 left-0 h-full w-2/3 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shadow-xl z-[100] overflow-hidden transform transition-transform duration-300 ${
+      className={`fixed top-0 left-0 h-full w-1/3 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shadow-xl z-[100] overflow-hidden transform transition-transform duration-300 ${
         isOpen ? "translate-x-0" : "-translate-x-full"
       }`}
     >
@@ -47,18 +47,17 @@ const DocsModal: React.FC<DocsModalProps> = ({ isOpen, onClose }) => {
           <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
             Select Resource Type
           </label>
-          <Select value={selectedResourceType} onValueChange={setSelectedResourceType}>
-            <SelectTrigger className="w-64">
-              <SelectValue placeholder="Choose a resource type" />
-            </SelectTrigger>
-            <SelectContent>
-              {resourceTypes.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <select 
+            value={selectedResourceType} 
+            onChange={(e) => setSelectedResourceType(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {resourceTypes.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Examples */}
