@@ -12,9 +12,10 @@ interface SidebarProps {
   yaml: string;
   onCollapseChange: (collapsed: boolean) => void;
   onImportYaml: (yaml: string) => void;
+  onNotification?: (message: string, type?: 'success' | 'error') => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ onAddNode, yaml, onCollapseChange, onImportYaml }) => {
+const Sidebar: React.FC<SidebarProps> = ({ onAddNode, yaml, onCollapseChange, onImportYaml, onNotification }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [yamlInput, setYamlInput] = useState('');
   const { setType } = useDnD();
@@ -90,7 +91,25 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddNode, yaml, onCollapseChange, on
                 placeholder="Paste your YAML here..."
                 className="h-full"
               />
-              <Button onClick={() => onImportYaml(yamlInput)} size="sm">
+              <Button onClick={() => {
+                if (!yamlInput.trim()) {
+                  onNotification?.('Please enter YAML content first');
+                  return;
+                }
+                
+                // Basic YAML validation
+                const trimmedYaml = yamlInput.trim();
+                if (!trimmedYaml.includes('apiVersion') || !trimmedYaml.includes('kind')) {
+                  onNotification?.('Invalid YAML: Missing required Kubernetes fields (apiVersion, kind)');
+                  return;
+                }
+                
+                try {
+                  onImportYaml(yamlInput);
+                } catch (error) {
+                  onNotification?.('YAML file format is not correct');
+                }
+              }} size="sm">
                 Generate Diagram
               </Button>
             </div>

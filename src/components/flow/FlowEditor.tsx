@@ -22,6 +22,7 @@ const FlowEditorInner: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isToolsOpen, setIsToolsOpen] = useState(false);
   const [isDocsOpen, setIsDocsOpen] = useState(false);
+  const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
   const { screenToFlowPosition, setViewport } = useReactFlow();
   const { type, setType } = useDnD();
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
@@ -47,7 +48,7 @@ const FlowEditorInner: React.FC = () => {
     try {
       const docs = yaml.loadAll(yamlString).filter(d => d) as any[];
       const newNodes: K8sNode[] = [];
-      let newNextId = 1;
+      let currentNextId = nextId;
 
       docs.forEach((doc, index) => {
         if (doc && doc.kind && doc.metadata) {
@@ -55,9 +56,9 @@ const FlowEditorInner: React.FC = () => {
           if (resourceRegistry[kind]) {
             const { schema, uiSchema, defaultResource } = resourceRegistry[kind];
             const newNode: K8sNode = {
-              id: `${newNextId++}`,
+              id: `${currentNextId++}`,
               type: kind.toLowerCase(),
-              position: { x: 250 * index, y: 100 },
+              position: { x: 250 * index, y: 100 + Math.random() * 100 },
               data: {
                 resource: { ...defaultResource, ...doc },
                 schema: schema as Record<string, unknown>,
@@ -69,14 +70,21 @@ const FlowEditorInner: React.FC = () => {
         }
       });
 
-      setNodes(newNodes);
-      setEdges([]);
-      setNextId(newNextId);
+      setNodes((existingNodes) => [...existingNodes, ...newNodes]);
+      setNextId(currentNextId);
+      
+      if (newNodes.length === 0) {
+        setNotification({message: 'No valid Kubernetes resources found in YAML', type: 'error'});
+      } else {
+        setNotification({message: `Successfully imported ${newNodes.length} resources from YAML`, type: 'success'});
+      }
+      setTimeout(() => setNotification(null), 3000);
     } catch (error) {
       console.error('Error importing YAML:', error);
-      alert('Invalid YAML format');
+      setNotification({message: 'Error: Invalid YAML format', type: 'error'});
+      setTimeout(() => setNotification(null), 3000);
     }
-  }, [setNodes, setEdges, setNextId]);
+  }, [nextId, setNodes, setNextId]);
 
   const commands: Command[] = useMemo(() => [
     {
@@ -297,9 +305,20 @@ const FlowEditorInner: React.FC = () => {
         yaml={generateYAML()} 
         onCollapseChange={setIsSidebarCollapsed}
         onImportYaml={handleYamlImport}
+        onNotification={(message, type = 'error') => {
+          setNotification({message, type});
+          setTimeout(() => setNotification(null), 3000);
+        }}
       />
       <DocsModal isOpen={isDocsOpen} onClose={() => setIsDocsOpen(false)} />
       <ToolsModal isOpen={isToolsOpen} onClose={() => setIsToolsOpen(false)} />
+      {notification && (
+        <div className={`fixed top-20 right-4 z-50 text-white px-4 py-2 rounded-lg shadow-lg ${
+          notification.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+        }`}>
+          {notification.message}
+        </div>
+      )}
     </div>
   );
 };
