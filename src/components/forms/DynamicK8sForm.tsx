@@ -22,22 +22,28 @@ const widgets = {
 };
 
 const DynamicK8sForm: React.FC<DynamicK8sFormProps> = ({ nodeData, nodeId }) => {
+  const fixNestedKeyValueFields = (obj: any): any => {
+    if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) return obj;
+    
+    const result = { ...obj };
+    for (const [key, value] of Object.entries(result)) {
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        // Check if this is a nested key-value structure (field contains object with same key)
+        if ((value as any)[key] && typeof (value as any)[key] === 'object') {
+          result[key] = (value as any)[key];
+        } else {
+          // Recursively process nested objects but preserve arrays
+          result[key] = fixNestedKeyValueFields(value);
+        }
+      }
+    }
+    return result;
+  };
+
   const handleChange = useCallback((data: any) => {
     if (data.formData && nodeId) {
-      // Clean up nested structures in formData
-      const cleanedData = { ...data.formData };
+      const cleanedData = fixNestedKeyValueFields(data.formData);
       
-      // Fix nested labels
-      if (cleanedData.metadata?.labels?.labels) {
-        cleanedData.metadata.labels = cleanedData.metadata.labels.labels;
-      }
-      
-      // Fix nested data
-      if (cleanedData.data?.data) {
-        cleanedData.data = cleanedData.data.data;
-      }
-      
-      // Use updateResource if available, otherwise fallback to direct assignment
       if ((nodeData as any).updateResource) {
         (nodeData as any).updateResource(nodeId, cleanedData);
       } else {

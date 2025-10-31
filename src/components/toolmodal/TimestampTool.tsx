@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Copy, Check } from "lucide-react";
 import { Button } from "../ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+
 import { Textarea } from "../ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { format, formatISO, parseISO, formatDistanceToNow, isValid } from 'date-fns';
@@ -79,11 +79,9 @@ const TimestampTool: React.FC = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Timestamp Helper</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Timestamp Helper</h3>
+      <div className="space-y-4">
         {/* Current Time */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Current Time</label>
@@ -92,7 +90,7 @@ const TimestampTool: React.FC = () => {
               value={`Now: ${format(currentTime, 'yyyy-MM-dd HH:mm:ss')}\nISO8601: ${formatISO(currentTime)}`}
               readOnly
               rows={2}
-              className="flex-grow"
+              className="flex-grow text-sm bg-gray-50 dark:bg-gray-800"
             />
             <Button
               variant="ghost"
@@ -113,7 +111,8 @@ const TimestampTool: React.FC = () => {
             value={inputTimestamp}
             onChange={handleTimestampChange}
             placeholder="e.g., 2023-10-27T10:00:00Z or 2023-10-27"
-            rows={2}
+            rows={1}
+            className="text-sm"
           />
           <div className="flex items-center space-x-2">
             <Textarea
@@ -121,7 +120,7 @@ const TimestampTool: React.FC = () => {
               readOnly
               placeholder="Humanized duration will appear here..."
               rows={1}
-              className="flex-grow"
+              className="flex-grow text-sm bg-gray-50 dark:bg-gray-800"
             />
             {humanizedDuration && humanizedDuration !== "Invalid Date" && humanizedDuration !== "Invalid Date Format" && (
               <Button
@@ -140,8 +139,8 @@ const TimestampTool: React.FC = () => {
         {/* Cron Section */}
         <Tabs defaultValue="cronTranslator" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="cronTranslator">Cron to Human/Occurrences</TabsTrigger>
-            <TabsTrigger value="cronBuilder">Human to Cron (Builder)</TabsTrigger>
+            <TabsTrigger value="cronTranslator" className="text-xs">Cron → Human</TabsTrigger>
+            <TabsTrigger value="cronBuilder" className="text-xs">Human → Cron</TabsTrigger>
           </TabsList>
 
           <TabsContent value="cronTranslator" className="space-y-4">
@@ -151,15 +150,16 @@ const TimestampTool: React.FC = () => {
                 value={cronExpression}
                 onChange={handleCronExpressionChange}
                 placeholder="e.g., 0 0 * * *"
-                rows={2}
+                rows={1}
+                className="text-sm"
               />
               <div className="flex items-center space-x-2">
                 <Textarea
                   value={cronDescription}
                   readOnly
                   placeholder="Cron description will appear here..."
-                  rows={2}
-                  className="flex-grow"
+                  rows={1}
+                  className="flex-grow text-sm bg-gray-50 dark:bg-gray-800"
                 />
                 {cronDescription && cronDescription.startsWith("Invalid cron expression") === false && (
                   <Button
@@ -180,8 +180,8 @@ const TimestampTool: React.FC = () => {
                     <Textarea
                       value={nextCronOccurrences}
                       readOnly
-                      rows={5}
-                      className="flex-grow"
+                      rows={3}
+                      className="flex-grow text-sm bg-gray-50 dark:bg-gray-800"
                     />
                     <Button
                       variant="ghost"
@@ -199,7 +199,7 @@ const TimestampTool: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="cronBuilder" className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-2">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Minute (0-59 or *)</label>
                 <input
@@ -262,7 +262,7 @@ const TimestampTool: React.FC = () => {
                   readOnly
                   placeholder="Generated cron expression will appear here..."
                   rows={1}
-                  className="flex-grow"
+                  className="flex-grow text-sm bg-gray-50 dark:bg-gray-800"
                 />
                 {generatedCron && (
                   <Button
@@ -279,8 +279,8 @@ const TimestampTool: React.FC = () => {
             </div>
           </TabsContent>
         </Tabs>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

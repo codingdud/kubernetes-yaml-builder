@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Copy, Check } from "lucide-react";
 import { Button } from "../ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+
 import { Textarea } from "../ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import * as yaml from 'js-yaml';
@@ -40,11 +40,9 @@ const JsonTool: React.FC = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">JSON/YAML Converter</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">JSON/YAML Converter</h3>
+      <div className="space-y-4">
         <Tabs defaultValue="jsonToYaml" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="jsonToYaml">JSON to YAML</TabsTrigger>
@@ -58,7 +56,8 @@ const JsonTool: React.FC = () => {
                 value={jsonInput}
                 onChange={(e) => setJsonInput(e.target.value)}
                 placeholder="Enter JSON here..."
-                rows={8}
+                rows={4}
+                className="text-sm"
               />
             </div>
             <Button onClick={handleJsonToYamlConvert} className="w-full">
@@ -83,7 +82,8 @@ const JsonTool: React.FC = () => {
                 value={yamlOutput}
                 readOnly
                 placeholder="Converted YAML will appear here..."
-                rows={8}
+                rows={4}
+                className="text-sm bg-gray-50 dark:bg-gray-800"
               />
             </div>
           </TabsContent>
@@ -95,7 +95,8 @@ const JsonTool: React.FC = () => {
                 value={yamlInput}
                 onChange={(e) => setYamlInput(e.target.value)}
                 placeholder="Enter YAML here..."
-                rows={8}
+                rows={4}
+                className="text-sm"
               />
             </div>
             <Button onClick={handleYamlToJsonConvert} className="w-full">
@@ -120,13 +121,14 @@ const JsonTool: React.FC = () => {
                 value={jsonOutputFromYaml}
                 readOnly
                 placeholder="Converted JSON will appear here..."
-                rows={8}
+                rows={4}
+                className="text-sm bg-gray-50 dark:bg-gray-800"
               />
             </div>
           </TabsContent>
         </Tabs>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 export default JsonTool;

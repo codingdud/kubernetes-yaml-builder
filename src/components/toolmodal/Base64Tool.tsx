@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Copy, Check } from "lucide-react";
 import { Button } from "../ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+
 import { Textarea } from "../ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
@@ -30,11 +30,9 @@ const Base64Tool: React.FC = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Base64 Encoder/Decoder</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Base64 Encoder/Decoder</h3>
+      <div className="space-y-4">
         <Tabs
           defaultValue="encode"
           className="w-full"
@@ -61,7 +59,8 @@ const Base64Tool: React.FC = () => {
                     ? "Enter text to encode..."
                     : "Enter base64 to decode..."
                 }
-                rows={4}
+                rows={3}
+                className="text-sm"
               />
             </div>
 
@@ -95,7 +94,8 @@ const Base64Tool: React.FC = () => {
                 value={output}
                 readOnly
                 placeholder="Output will appear here..."
-                rows={4}
+                rows={3}
+                className="text-sm bg-gray-50 dark:bg-gray-800"
               />
             </div>
           </TabsContent>
@@ -103,8 +103,8 @@ const Base64Tool: React.FC = () => {
             {/* Identical to encode tab, shared states handle it */}
           </TabsContent>
         </Tabs>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
