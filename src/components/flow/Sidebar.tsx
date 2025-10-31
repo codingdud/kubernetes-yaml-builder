@@ -1,21 +1,24 @@
 import React, { useState } from 'react';
-import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
 import { Button } from '../ui/button';
 import CodePreview from '../ui/CodePreview';
 import resourceRegistry from '../../config/resourceRegistry';
 import { useDnD } from './DnDContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Textarea } from '../ui/textarea';
+import AIAssistant from '../ai/AIAssistant';
 
 interface SidebarProps {
   onAddNode: (kind: keyof typeof resourceRegistry) => void;
   yaml: string;
   onCollapseChange: (collapsed: boolean) => void;
-  onImportYaml: (yaml: string) => void;
+  onImportYaml: (yaml: string) => string[];
+  onRemoveNodes?: (nodeIds: string[]) => void;
   onNotification?: (message: string, type?: 'success' | 'error') => void;
+  diagramNodes?: Array<{ id: string; data: { label: string; formData: any; resourceType: string } }>;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ onAddNode, yaml, onCollapseChange, onImportYaml, onNotification }) => {
+const Sidebar: React.FC<SidebarProps> = ({ onAddNode, yaml, onCollapseChange, onImportYaml, onRemoveNodes, onNotification, diagramNodes }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [yamlInput, setYamlInput] = useState('');
   const { setType } = useDnD();
@@ -76,9 +79,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddNode, yaml, onCollapseChange, on
           </div>
         </div>
         <Tabs defaultValue="generated-yaml" className="h-full">
-          <TabsList>
-            <TabsTrigger value="generated-yaml">Generated YAML</TabsTrigger>
-            <TabsTrigger value="import-yaml">Import YAML</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="generated-yaml" className="text-xs">Generated</TabsTrigger>
+            <TabsTrigger value="import-yaml" className="text-xs">Import</TabsTrigger>
+            <TabsTrigger value="ai-generate" className="text-xs">AI <Sparkles className="h-5 w-5" /></TabsTrigger>
           </TabsList>
           <TabsContent value="generated-yaml" className="h-full">
             <CodePreview yaml={yaml} />
@@ -113,6 +117,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddNode, yaml, onCollapseChange, on
                 Generate Diagram
               </Button>
             </div>
+          </TabsContent>
+          <TabsContent value="ai-generate" className="h-full">
+            <AIAssistant 
+              onImportYaml={onImportYaml}
+              onRemoveNodes={onRemoveNodes || (() => {})}
+              onNotification={onNotification}
+              diagramNodes={diagramNodes}
+            />
           </TabsContent>
         </Tabs>
       </div>

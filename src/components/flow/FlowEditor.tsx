@@ -23,6 +23,12 @@ const FlowEditorInner: React.FC = () => {
   const [isToolsOpen, setIsToolsOpen] = useState(false);
   const [isDocsOpen, setIsDocsOpen] = useState(false);
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+
+  const handleRemoveNodes = useCallback((nodeIds: string[]) => {
+    setNodes(currentNodes => currentNodes.filter(node => !nodeIds.includes(node.id)));
+    setNotification({message: `Removed ${nodeIds.length} resources`, type: 'success'});
+    setTimeout(() => setNotification(null), 3000);
+  }, [setNodes]);
   const { screenToFlowPosition, setViewport } = useReactFlow();
   const { type, setType } = useDnD();
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
@@ -44,7 +50,7 @@ const FlowEditorInner: React.FC = () => {
     }
   }, [setNodes, setEdges, setViewport, setNextId]);
 
-  const handleYamlImport = useCallback((yamlString: string) => {
+  const handleYamlImport = useCallback((yamlString: string): string[] => {
     try {
       const docs = yaml.loadAll(yamlString).filter(d => d) as any[];
       const newNodes: K8sNode[] = [];
@@ -79,10 +85,13 @@ const FlowEditorInner: React.FC = () => {
         setNotification({message: `Successfully imported ${newNodes.length} resources from YAML`, type: 'success'});
       }
       setTimeout(() => setNotification(null), 3000);
+      
+      return newNodes.map(node => node.id);
     } catch (error) {
       console.error('Error importing YAML:', error);
       setNotification({message: 'Error: Invalid YAML format', type: 'error'});
       setTimeout(() => setNotification(null), 3000);
+      return [];
     }
   }, [nextId, setNodes, setNextId]);
 
@@ -305,10 +314,23 @@ const FlowEditorInner: React.FC = () => {
         yaml={generateYAML()} 
         onCollapseChange={setIsSidebarCollapsed}
         onImportYaml={handleYamlImport}
+        onRemoveNodes={handleRemoveNodes}
         onNotification={(message, type = 'error') => {
           setNotification({message, type});
           setTimeout(() => setNotification(null), 3000);
         }}
+        diagramNodes={nodes.map(node => {
+          const k8sNode = node as K8sNode;
+          const metadata = k8sNode.data.resource?.metadata as { name?: string } | undefined;
+          return {
+            id: node.id,
+            data: {
+              label: metadata?.name || `${node.type}-${node.id}`,
+              formData: k8sNode.data.resource || {},
+              resourceType: String(k8sNode.data.resource?.kind || node.type || 'Unknown')
+            }
+          };
+        })}
       />
       <DocsModal isOpen={isDocsOpen} onClose={() => setIsDocsOpen(false)} />
       <ToolsModal isOpen={isToolsOpen} onClose={() => setIsToolsOpen(false)} />
