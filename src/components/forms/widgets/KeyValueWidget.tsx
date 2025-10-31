@@ -12,7 +12,7 @@ const KeyValueWidget: React.FC<WidgetProps> = ({ value = {}, onChange, id, formC
     }
     
     return Object.entries(obj)
-      .filter(([key, val]) => typeof val !== 'object')
+      .filter(([, val]) => typeof val !== 'object')
       .map(([key, val]) => ({
         key,
         value: String(val || '')
