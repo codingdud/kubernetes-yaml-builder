@@ -56,7 +56,13 @@ const resourceRegistry = {
     schema: secretSchema,
     uiSchema: secretUiSchema,
     NodeComponent: ResourceNode,
-    defaultResource: { apiVersion: 'v1', kind: 'Secret', metadata: { name: '' }, data: {} }
+    defaultResource: { 
+      apiVersion: 'v1', 
+      kind: 'Secret', 
+      metadata: { name: '' }, 
+      type: 'Opaque',
+      data: {} 
+    }
   },
   CronJob: {
     schema: cronjobSchema,

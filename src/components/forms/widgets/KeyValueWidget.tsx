@@ -1,13 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { type WidgetProps } from '@rjsf/utils';
 import { Button } from '../../ui/button';
 import { Plus } from 'lucide-react';
 import KeyValuePair from './KeyValuePair';
 
 const KeyValueWidget: React.FC<WidgetProps> = ({ value = {}, onChange, id, formContext }) => {
-  const [pairs, setPairs] = useState<Array<{ key: string; value: string }>>(
-    Object.entries(value).map(([key, val]) => ({ key, value: val as string }))
-  );
+  // Convert the value object to array of pairs, ensuring flat structure
+  const valueToPairs = useCallback((obj: Record<string, any>) => {
+    if (typeof obj !== 'object' || Array.isArray(obj) || obj === null) {
+      return [];
+    }
+    
+    return Object.entries(obj)
+      .filter(([key, val]) => typeof val !== 'object')
+      .map(([key, val]) => ({
+        key,
+        value: String(val || '')
+      }));
+  }, []);
+
+  const [pairs, setPairs] = useState<Array<{ key: string; value: string }>>(valueToPairs(value));
+
+  // Update pairs when value prop changes
+  useEffect(() => {
+    setPairs(valueToPairs(value));
+  }, [value, valueToPairs]);
 
   const addPair = () => {
     const newPairs = [...pairs, { key: '', value: '' }];
@@ -29,12 +46,16 @@ const KeyValueWidget: React.FC<WidgetProps> = ({ value = {}, onChange, id, formC
   };
 
   const updateValue = (newPairs: Array<{ key: string; value: string }>) => {
+    // Create a flat key-value object
     const newValue = newPairs.reduce((acc, pair) => {
-      if (pair.key.trim()) {
-        acc[pair.key] = pair.value;
+      const key = pair.key.trim();
+      // Only include pairs where key is not empty
+      if (key) {
+        acc[key] = pair.value;
       }
       return acc;
     }, {} as Record<string, string>);
+
     onChange(newValue);
   };
 

@@ -5,7 +5,7 @@ import { Handle, Position } from '@xyflow/react';
 
 interface KeyValuePairProps {
   index: number;
-  pair: { key: string; value: string };
+  pair: { key: string; value: string; error?: string };
   onUpdate: (index: number, field: 'key' | 'value', value: string) => void;
   onRemove: () => void;
   formContext: any;
@@ -28,13 +28,22 @@ const KeyValuePair: React.FC<KeyValuePairProps> = ({
     <div className="flex gap-2 items-center">
       
       <div className="flex-1">
-        <input
-          type="text"
-          placeholder="Key"
-          value={pair.key}
-          onChange={(e) => onUpdate(index, 'key', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Key"
+            value={pair.key}
+            onChange={(e) => onUpdate(index, 'key', e.target.value)}
+            className={`w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+              pair.error ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+            }`}
+          />
+          {pair.error && (
+            <div className="absolute left-0 right-0 -bottom-5 text-xs text-red-500">
+              {pair.error}
+            </div>
+          )}
+        </div>
       </div>
       <div className="w-full relative flex-1">
         <input
@@ -42,7 +51,9 @@ const KeyValuePair: React.FC<KeyValuePairProps> = ({
           placeholder="Value"
           value={pair.value}
           onChange={(e) => onUpdate(index, 'value', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className={`w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+            pair.error ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+          }`}
         />
         {formContext?.nodeId && (
           <>

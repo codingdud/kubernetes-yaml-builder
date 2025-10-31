@@ -24,11 +24,24 @@ const widgets = {
 const DynamicK8sForm: React.FC<DynamicK8sFormProps> = ({ nodeData, nodeId }) => {
   const handleChange = useCallback((data: any) => {
     if (data.formData && nodeId) {
+      // Clean up nested structures in formData
+      const cleanedData = { ...data.formData };
+      
+      // Fix nested labels
+      if (cleanedData.metadata?.labels?.labels) {
+        cleanedData.metadata.labels = cleanedData.metadata.labels.labels;
+      }
+      
+      // Fix nested data
+      if (cleanedData.data?.data) {
+        cleanedData.data = cleanedData.data.data;
+      }
+      
       // Use updateResource if available, otherwise fallback to direct assignment
       if ((nodeData as any).updateResource) {
-        (nodeData as any).updateResource(nodeId, data.formData);
+        (nodeData as any).updateResource(nodeId, cleanedData);
       } else {
-        nodeData.resource = data.formData;
+        nodeData.resource = cleanedData;
       }
     }
   }, [nodeData, nodeId]);

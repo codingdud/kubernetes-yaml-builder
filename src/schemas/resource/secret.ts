@@ -23,61 +23,7 @@ export const secretUiSchema: UiSchema = {
   },
   'data': {
     'ui:widget': 'KeyValueWidget',
-    'ui:help': 'Base64 encoded data. For TLS secrets, use keys: tls.crt and tls.key',
-    'tls.crt': {
-      'ui:widget': 'TextareaWidget',
-      'ui:placeholder': 'Base64 encoded TLS certificate',
-      'ui:options': {
-        'rows': 4
-      }
-    },
-    'tls.key': {
-      'ui:widget': 'TextareaWidget',
-      'ui:placeholder': 'Base64 encoded TLS private key',
-      'ui:options': {
-        'rows': 4
-      }
-    },
-    'ca.crt': {
-      'ui:widget': 'TextareaWidget',
-      'ui:placeholder': 'Base64 encoded CA certificate',
-      'ui:options': {
-        'rows': 4
-      }
-    },
-    '.dockerconfigjson': {
-      'ui:widget': 'TextareaWidget',
-      'ui:placeholder': 'Base64 encoded Docker config JSON',
-      'ui:options': {
-        'rows': 3
-      }
-    },
-    'username': {
-      'ui:widget': 'TextWidget',
-      'ui:placeholder': 'Base64 encoded username'
-    },
-    'password': {
-      'ui:widget': 'TextWidget',
-      'ui:placeholder': 'Base64 encoded password'
-    },
-    'ssh-privatekey': {
-      'ui:widget': 'TextareaWidget',
-      'ui:placeholder': 'Base64 encoded SSH private key',
-      'ui:options': {
-        'rows': 4
-      }
-    },
-    'ssh-publickey': {
-      'ui:widget': 'TextareaWidget',
-      'ui:placeholder': 'Base64 encoded SSH public key',
-      'ui:options': {
-        'rows': 2
-      }
-    },
-    'token': {
-      'ui:widget': 'TextWidget',
-      'ui:placeholder': 'Base64 encoded service account token'
-    }
+    'ui:help': 'Base64 encoded data (e.g., username: YWRtaW4=, password: MWYyZDFlMmU2N2Rm)'
   },
   'stringData': {
     'ui:widget': 'KeyValueWidget',
