@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "enum": ["v1"],
+      "default": "v1"
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["PersistentVolumeClaim"],
+      "default": "PersistentVolumeClaim"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "namespace": { "type": "string", "default": "default" },
+        "labels": { "$ref": "#/definitions/keyValuePairs" },
+        "annotations": { "$ref": "#/definitions/keyValuePairs" }
+      }
+    },
+    "spec": {
+      "type": "object",
+      "required": ["accessModes", "resources"],
+      "properties": {
+        "accessModes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["ReadWriteOnce", "ReadOnlyMany", "ReadWriteMany", "ReadWriteOncePod"]
+          }
+        },
+        "resources": {
+          "type": "object",
+          "properties": {
+            "requests": {
+              "type": "object",
+              "properties": {
+                "storage": { "type": "string", "default": "1Gi" }
+              }
+            }
+          }
+        },
+        "storageClassName": { "type": "string" },
+        "volumeMode": {
+          "type": "string",
+          "enum": ["Filesystem", "Block"],
+          "default": "Filesystem"
+        },
+        "volumeName": { "type": "string" },
+        "selector": {
+          "type": "object",
+          "properties": {
+            "matchLabels": { "$ref": "#/definitions/keyValuePairs" }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "keyValuePairs": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  }
+}

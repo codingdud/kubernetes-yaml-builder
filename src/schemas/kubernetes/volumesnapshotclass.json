@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "driver", "deletionPolicy"],
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "enum": ["snapshot.storage.k8s.io/v1"],
+      "default": "snapshot.storage.k8s.io/v1"
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["VolumeSnapshotClass"],
+      "default": "VolumeSnapshotClass"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "labels": { "$ref": "#/definitions/keyValuePairs" },
+        "annotations": { "$ref": "#/definitions/keyValuePairs" }
+      }
+    },
+    "driver": { "type": "string" },
+    "deletionPolicy": {
+      "type": "string",
+      "enum": ["Delete", "Retain"],
+      "default": "Delete"
+    },
+    "parameters": {
+      "$ref": "#/definitions/keyValuePairs"
+    }
+  },
+  "definitions": {
+    "keyValuePairs": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  }
+}

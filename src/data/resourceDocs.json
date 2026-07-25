@@ -1,0 +1,185 @@
+{
+  "Deployment": {
+    "description": "Manages a set of identical Pods, ensuring a desired number are always running. Supports rolling updates, rollbacks, and scaling. Ideal for stateless applications where any Pod can handle any request.",
+    "apiVersion": "apps/v1",
+    "useCases": ["Web servers", "REST APIs", "Stateless microservices", "Frontend apps"],
+    "keyFields": [
+      { "field": "spec.replicas", "description": "Number of identical Pod copies to keep running at all times." },
+      { "field": "spec.selector.matchLabels", "description": "Label query used to identify which Pods belong to this Deployment. Must match the Pod template labels." },
+      { "field": "spec.template", "description": "Blueprint for each Pod: defines containers, images, ports, env vars, volumes, and probes." },
+      { "field": "spec.strategy", "description": "How Pods are replaced during updates. RollingUpdate (default) replaces Pods gradually with zero downtime; Recreate kills all old Pods before starting new ones." },
+      { "field": "spec.template.spec.containers[].resources", "description": "CPU/memory requests (guaranteed) and limits (maximum) for each container. Required for autoscaling and scheduling." },
+      { "field": "spec.template.spec.containers[].livenessProbe", "description": "Kubelet uses this probe to decide when to restart a container. Fails → container restarts." },
+      { "field": "spec.template.spec.containers[].readinessProbe", "description": "Kubelet uses this probe to decide when a container is ready to receive traffic. Fails → removed from Service endpoints." }
+    ]
+  },
+  "StatefulSet": {
+    "description": "Like a Deployment but for stateful applications. Each Pod gets a stable, unique identity (name + DNS) and persistent storage that survives restarts. Pods are created and deleted in order.",
+    "apiVersion": "apps/v1",
+    "useCases": ["Databases (MySQL, PostgreSQL)", "Message queues (Kafka, RabbitMQ)", "Distributed stores (Cassandra, etcd)", "Any app that needs stable network identity"],
+    "keyFields": [
+      { "field": "spec.serviceName", "description": "Name of the Headless Service that governs this StatefulSet. Required — provides stable DNS for each Pod (pod-0.svc, pod-1.svc, …)." },
+      { "field": "spec.replicas", "description": "Number of Pods. Created in order (0, 1, 2…) and deleted in reverse order." },
+      { "field": "spec.selector.matchLabels", "description": "Must match the Pod template labels." },
+      { "field": "spec.volumeClaimTemplates", "description": "PVC template automatically provisioned per Pod. Each Pod gets its own persistent volume that survives Pod rescheduling." },
+      { "field": "spec.updateStrategy", "description": "RollingUpdate (default) updates Pods one at a time in reverse order. OnDelete requires manual Pod deletion to trigger updates." }
+    ]
+  },
+  "DaemonSet": {
+    "description": "Ensures exactly one Pod runs on every (or selected) Node in the cluster. When new Nodes join, a Pod is automatically scheduled on them. When Nodes are removed, the Pod is garbage collected.",
+    "apiVersion": "apps/v1",
+    "useCases": ["Log collectors (Fluentd, Filebeat)", "Monitoring agents (Prometheus node-exporter)", "Network plugins (CNI)", "Storage daemons (Ceph)"],
+    "keyFields": [
+      { "field": "spec.selector.matchLabels", "description": "Identifies which Pods are managed by this DaemonSet." },
+      { "field": "spec.template", "description": "Pod template. No replicas field — the scheduler ensures one Pod per node." },
+      { "field": "spec.updateStrategy", "description": "RollingUpdate replaces Pods one node at a time. OnDelete requires manual Pod deletion." },
+      { "field": "spec.template.spec.nodeSelector", "description": "Optional: restrict to specific nodes by label (e.g., only GPU nodes or specific OS)." },
+      { "field": "spec.template.spec.tolerations", "description": "Allow the DaemonSet Pod to be scheduled on tainted nodes (e.g., master nodes with NoSchedule taint)." }
+    ]
+  },
+  "ReplicaSet": {
+    "description": "Maintains a stable number of identical Pod replicas at any given time. Usually managed by a Deployment — create a ReplicaSet directly only when you need low-level control without the Deployment update machinery.",
+    "apiVersion": "apps/v1",
+    "useCases": ["Controlled by Deployments (rarely created directly)", "Custom scaling logic", "Pinned Pod version with no update lifecycle"],
+    "keyFields": [
+      { "field": "spec.replicas", "description": "Desired number of Pods. The ReplicaSet controller reconciles this continuously." },
+      { "field": "spec.selector.matchLabels", "description": "Selects which Pods this ReplicaSet owns. Pods matching this selector but not owned are adopted." },
+      { "field": "spec.template", "description": "Pod template. Unlike Deployment, changes here do NOT trigger rolling updates — existing Pods are not replaced." }
+    ]
+  },
+  "Job": {
+    "description": "Runs one or more Pods to completion. Unlike Deployments, Jobs are not restarted after they succeed — they terminate when the desired number of completions is reached.",
+    "apiVersion": "batch/v1",
+    "useCases": ["Batch data processing", "Database migrations", "One-off scripts", "Parallel computation tasks"],
+    "keyFields": [
+      { "field": "spec.completions", "description": "Total number of successful Pod completions required. Default: 1." },
+      { "field": "spec.parallelism", "description": "Number of Pods that may run simultaneously. Useful for parallel batch work." },
+      { "field": "spec.backoffLimit", "description": "Number of retries before the Job is considered failed. Default: 6." },
+      { "field": "spec.activeDeadlineSeconds", "description": "Job-level timeout: terminates the Job after this many seconds regardless of retries." },
+      { "field": "spec.template.spec.restartPolicy", "description": "Must be Never or OnFailure. OnFailure restarts the same Pod; Never creates a new Pod on failure." }
+    ]
+  },
+  "CronJob": {
+    "description": "Runs Jobs on a repeating schedule using standard Unix cron syntax. Creates a new Job object at each scheduled time. Use for periodic tasks that should run automatically.",
+    "apiVersion": "batch/v1",
+    "useCases": ["Nightly database backups", "Periodic report generation", "Cache warming", "Scheduled cleanup tasks"],
+    "keyFields": [
+      { "field": "spec.schedule", "description": "Cron expression defining when Jobs are created. Format: minute hour day-of-month month day-of-week. Example: '0 2 * * *' = 2am daily." },
+      { "field": "spec.jobTemplate", "description": "Job template created on each schedule trigger. Same spec as a regular Job." },
+      { "field": "spec.concurrencyPolicy", "description": "Allow (default): concurrent Jobs permitted. Forbid: skip new Job if previous still running. Replace: cancel previous Job and start new one." },
+      { "field": "spec.successfulJobsHistoryLimit", "description": "Number of successful Job records to retain. Default: 3." },
+      { "field": "spec.failedJobsHistoryLimit", "description": "Number of failed Job records to retain. Default: 1." },
+      { "field": "spec.startingDeadlineSeconds", "description": "How many seconds past a scheduled time the Job can still start before being skipped." }
+    ]
+  },
+  "Service": {
+    "description": "Provides a stable network endpoint (IP + DNS) to reach a dynamic set of Pods. Since Pods are ephemeral and their IPs change, Services act as a reliable load-balanced entry point.",
+    "apiVersion": "v1",
+    "useCases": ["Exposing Deployments internally", "External load balancing", "Service discovery between microservices"],
+    "keyFields": [
+      { "field": "spec.type", "description": "ClusterIP (default): internal cluster IP only. NodePort: exposes on each Node's IP at a static port. LoadBalancer: provisions a cloud load balancer. ExternalName: maps to a DNS name." },
+      { "field": "spec.selector", "description": "Label query to identify target Pods. Traffic is load-balanced across all matching Pods that pass readiness checks." },
+      { "field": "spec.ports[].port", "description": "Port the Service listens on (what clients connect to)." },
+      { "field": "spec.ports[].targetPort", "description": "Port on the Pod that traffic is forwarded to. Defaults to the same as port." },
+      { "field": "spec.ports[].nodePort", "description": "NodePort type only: static port (30000–32767) exposed on every Node's external IP." },
+      { "field": "spec.clusterIP: None", "description": "Headless Service — no virtual IP, returns Pod IPs directly. Used with StatefulSets for stable DNS per Pod." }
+    ]
+  },
+  "Ingress": {
+    "description": "Manages external HTTP/HTTPS access to Services inside the cluster. Acts as a reverse proxy router — maps hostnames and URL paths to backend Services. Requires an Ingress Controller (nginx, traefik, etc.) to be installed.",
+    "apiVersion": "networking.k8s.io/v1",
+    "useCases": ["Single entry point for multiple services", "SSL/TLS termination", "Host-based and path-based routing", "Replacing multiple LoadBalancer Services with one"],
+    "keyFields": [
+      { "field": "spec.ingressClassName", "description": "Which Ingress Controller handles this resource (e.g. nginx, traefik, alb). Replaces the deprecated annotation." },
+      { "field": "spec.rules[].host", "description": "Hostname to match (e.g. api.example.com). Omit for a wildcard rule." },
+      { "field": "spec.rules[].http.paths[].path", "description": "URL path prefix or exact path to match." },
+      { "field": "spec.rules[].http.paths[].pathType", "description": "Prefix: /foo matches /foo, /foo/bar. Exact: /foo matches only /foo. ImplementationSpecific: controller decides." },
+      { "field": "spec.tls", "description": "Enables HTTPS. References a Secret containing the TLS certificate and private key. Causes HTTP → HTTPS redirect." },
+      { "field": "metadata.annotations", "description": "Controller-specific settings (rate limiting, auth, rewrites, etc.) injected as annotations. Syntax varies by controller." }
+    ]
+  },
+  "ConfigMap": {
+    "description": "Stores non-sensitive configuration data as key-value pairs. Decouples configuration from container images so you can change config without rebuilding. Pods consume ConfigMaps as environment variables, command-line args, or mounted files.",
+    "apiVersion": "v1",
+    "useCases": ["App configuration files", "Feature flags", "Connection strings (non-secret)", "Shell scripts or templates"],
+    "keyFields": [
+      { "field": "data", "description": "String key-value pairs. Values can be simple strings or multi-line files (use | for block literals)." },
+      { "field": "binaryData", "description": "Base64-encoded binary values (images, certificates). Keys must be different from data keys." },
+      { "field": "immutable", "description": "Set to true to prevent any changes after creation. Improves performance by removing watches — use for static config." },
+      { "field": "Pod envFrom.configMapRef", "description": "Inject all keys as environment variables into a container." },
+      { "field": "Pod volumeMounts + volumes.configMap", "description": "Mount keys as files in a directory inside the container. Changes to the ConfigMap are reflected within ~60s." }
+    ]
+  },
+  "Secret": {
+    "description": "Stores sensitive data (passwords, tokens, keys) separately from Pod specs. Data is base64-encoded (not encrypted by default — use Sealed Secrets or KMS for encryption at rest). Pods reference Secrets without embedding credentials in manifests.",
+    "apiVersion": "v1",
+    "useCases": ["Database passwords", "API keys and tokens", "TLS certificates", "Docker registry credentials", "SSH keys"],
+    "keyFields": [
+      { "field": "type", "description": "Opaque (default): arbitrary data. kubernetes.io/tls: TLS cert + key. kubernetes.io/dockerconfigjson: registry auth. kubernetes.io/service-account-token: SA tokens." },
+      { "field": "data", "description": "Base64-encoded key-value pairs. Encode values with: echo -n 'value' | base64" },
+      { "field": "stringData", "description": "Plain-text key-value pairs (not base64). Kubernetes encodes them on write. Convenient for creating Secrets without manual encoding." },
+      { "field": "immutable", "description": "Prevents modifications after creation. Improves cluster performance for Secrets that should never change." }
+    ]
+  },
+  "StorageClass": {
+    "description": "Defines a class of storage with specific provisioner and parameters. When a PVC references a StorageClass, the provisioner dynamically creates a PersistentVolume matching the PVC's request. Eliminates the need to pre-provision storage manually.",
+    "apiVersion": "storage.k8s.io/v1",
+    "useCases": ["Dynamic PV provisioning", "Defining fast vs. slow storage tiers", "Cloud provider disk types (gp3, io1, premium)", "NFS or local storage classes"],
+    "keyFields": [
+      { "field": "provisioner", "description": "CSI driver or in-tree provisioner that creates the volume. Examples: ebs.csi.aws.com, disk.csi.azure.com, pd.csi.storage.gke.io, kubernetes.io/no-provisioner (manual)." },
+      { "field": "parameters", "description": "Provisioner-specific settings passed to the driver. Examples: type=gp3, fsType=ext4, replication-type=regional-pd." },
+      { "field": "reclaimPolicy", "description": "What happens to the PV when its PVC is deleted. Delete (default): PV and backing storage are removed. Retain: PV and data are kept (manual cleanup required)." },
+      { "field": "volumeBindingMode", "description": "Immediate (default): PV provisioned as soon as PVC is created. WaitForFirstConsumer: PV provisioned only when a Pod using the PVC is scheduled — ensures volume is in the same zone as the Pod." },
+      { "field": "allowVolumeExpansion", "description": "Set to true to allow users to resize PVCs backed by this StorageClass. The CSI driver must also support expansion." },
+      { "field": "mountOptions", "description": "Options passed to the mount command when attaching the volume (e.g. hard, nfsvers=4.1). Unsupported options cause mount to fail." }
+    ]
+  },
+  "PersistentVolumeClaim": {
+    "description": "A request for storage by a user. Like a Pod consuming node resources, a PVC consumes PV resources. Kubernetes binds the PVC to a suitable PersistentVolume (static) or triggers dynamic provisioning via a StorageClass.",
+    "apiVersion": "v1",
+    "useCases": ["Attaching persistent disks to Pods", "Database data directories", "File upload storage", "Shared read-only data"],
+    "keyFields": [
+      { "field": "spec.accessModes", "description": "ReadWriteOnce (RWO): mounted read-write by a single node — most block storage. ReadOnlyMany (ROX): mounted read-only by many nodes. ReadWriteMany (RWX): mounted read-write by many nodes — requires NFS/CephFS. ReadWriteOncePod (RWOP): single Pod only (K8s 1.22+)." },
+      { "field": "spec.resources.requests.storage", "description": "Amount of storage requested (e.g. 5Gi, 100Mi). The bound PV must be at least this size." },
+      { "field": "spec.storageClassName", "description": "Which StorageClass to use for dynamic provisioning. Leave empty to use the cluster default. Set to '' to disable dynamic provisioning (bind to existing PV only)." },
+      { "field": "spec.volumeMode", "description": "Filesystem (default): volume is formatted and mounted as a directory. Block: volume is exposed as a raw block device to the Pod." },
+      { "field": "spec.selector", "description": "Bind only to PVs matching these labels. Useful for static binding to a specific pre-provisioned PV." },
+      { "field": "spec.volumeName", "description": "Directly bind to a specific PV by name, bypassing selector matching." }
+    ]
+  },
+  "VolumeSnapshot": {
+    "description": "Requests a point-in-time snapshot of a PersistentVolumeClaim. The snapshot can be used to create new PVCs (restore data), clone volumes, or back up data. Requires a CSI driver that supports snapshots.",
+    "apiVersion": "snapshot.storage.k8s.io/v1",
+    "useCases": ["Backup before upgrades or migrations", "Cloning data for test environments", "Disaster recovery", "Point-in-time restore"],
+    "keyFields": [
+      { "field": "spec.volumeSnapshotClassName", "description": "Which VolumeSnapshotClass (and CSI driver) handles this snapshot. Determines snapshot storage backend and deletion policy." },
+      { "field": "spec.source.persistentVolumeClaimName", "description": "PVC to snapshot. Used when dynamically creating a new snapshot from an existing volume." },
+      { "field": "spec.source.volumeSnapshotContentName", "description": "Pre-existing VolumeSnapshotContent to bind to. Used for importing snapshots that already exist in the storage backend." },
+      { "field": "status.readyToUse", "description": "Becomes true when the snapshot is fully taken and available to restore from." },
+      { "field": "Restore via PVC", "description": "To restore: create a PVC with spec.dataSource.name pointing to this VolumeSnapshot — Kubernetes provisions a new volume pre-populated with snapshot data." }
+    ]
+  },
+  "VolumeSnapshotContent": {
+    "description": "Cluster-scoped resource representing an actual snapshot in the storage backend. Like a PersistentVolume for snapshots — VolumeSnapshots bind to VolumeSnapshotContents. Created automatically when you take a snapshot, or manually for pre-provisioned snapshots.",
+    "apiVersion": "snapshot.storage.k8s.io/v1",
+    "useCases": ["Cluster-admin management of existing snapshots", "Importing snapshots from outside Kubernetes", "Manual snapshot lifecycle control"],
+    "keyFields": [
+      { "field": "spec.deletionPolicy", "description": "Delete: removes the snapshot from storage when the VolumeSnapshotContent is deleted. Retain: keeps the storage snapshot even after the object is deleted." },
+      { "field": "spec.driver", "description": "CSI driver name that manages this snapshot (must match VolumeSnapshotClass driver)." },
+      { "field": "spec.source.snapshotHandle", "description": "Pre-provisioned: the ID/handle of an existing snapshot in the storage system." },
+      { "field": "spec.source.volumeHandle", "description": "Dynamic: the volume handle of the source volume (for dynamically-created content)." },
+      { "field": "spec.volumeSnapshotRef", "description": "Bidirectional binding reference to the VolumeSnapshot that owns this content." }
+    ]
+  },
+  "VolumeSnapshotClass": {
+    "description": "Defines the driver and parameters for taking VolumeSnapshots — the snapshot equivalent of StorageClass. Cluster-scoped. Multiple classes can exist for different snapshot tiers (e.g. fast vs. archive).",
+    "apiVersion": "snapshot.storage.k8s.io/v1",
+    "useCases": ["Configuring snapshot backend options", "Defining multiple snapshot tiers", "Setting default snapshot behavior"],
+    "keyFields": [
+      { "field": "driver", "description": "CSI driver that handles snapshot operations. Must match the CSI driver managing your PVs (e.g. ebs.csi.aws.com)." },
+      { "field": "deletionPolicy", "description": "Delete: snapshot removed from storage when VolumeSnapshotContent is deleted. Retain: snapshot preserved in storage (must be cleaned up manually)." },
+      { "field": "parameters", "description": "Driver-specific options for snapshot creation (e.g. type=io1, location=us-east-1). Passed directly to the CSI driver." },
+      { "field": "metadata.annotations: snapshot.storage.kubernetes.io/is-default-class", "description": "Set to 'true' to make this the default VolumeSnapshotClass used when no class is specified in a VolumeSnapshot." }
+    ]
+  }
+}

@@ -21,6 +21,7 @@
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/postcss": "^4.1.12",
     "@tailwindcss/vite": "^4.1.12",
+    "@thesvg/react": "^3.2.13",
     "@xyflow/react": "^12.8.3",
     "autoprefixer": "^10.4.21",
     "class-variance-authority": "^0.7.1",

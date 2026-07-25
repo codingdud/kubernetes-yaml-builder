@@ -3,6 +3,25 @@
 @custom-variant dark (&:where(.dark, .dark *));
 @source "../node_modules/@rjsf/core/dist/rjsf.css";
 
+/* Button press: quick scale-down, spring bounce-back on release */
+.btn-press {
+  transition: transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.btn-press:active {
+  transform: scale(0.91);
+  transition-duration: 70ms;
+  transition-timing-function: ease-in;
+}
+
+/* Hide scrollbar while keeping scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Enhanced React JSON Schema Form styles */
 .rjsf .form-group {
   @apply mb-4;
