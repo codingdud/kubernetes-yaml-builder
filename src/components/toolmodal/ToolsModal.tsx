@@ -31,7 +31,7 @@ const ToolsModal: React.FC<ToolsModalProps> = ({ isOpen, onClose }) => {
       </div>
 
       {/* Content */}
-      <div className="p-6 overflow-y-auto h-[calc(100vh-88px)]">
+      <div className="p-6 overflow-y-auto scrollbar-hide h-[calc(100vh-88px)]">
         <Tabs defaultValue="base64" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="base64" className="text-sm">Base64</TabsTrigger>
