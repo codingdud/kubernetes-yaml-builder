@@ -2,6 +2,10 @@ import { type UiSchema } from '@rjsf/utils';
 
 export const ingressUiSchema: UiSchema = {
   'metadata': {
+    'ui:options': {
+      collapsible: true,
+      title: 'Metadata'
+    },
     'name': {
       'ui:widget': 'TextWidget',
       'ui:placeholder': 'Enter Ingress name'
@@ -18,6 +22,10 @@ export const ingressUiSchema: UiSchema = {
     }
   },
   'spec': {
+    'ui:options': {
+      collapsible: true,
+      title: 'Spec'
+    },
     'ingressClassName': {
       'ui:widget': 'TextWidget',
       'ui:placeholder': 'Ingress class name (e.g., nginx)'
@@ -41,6 +49,11 @@ export const ingressUiSchema: UiSchema = {
       }
     },
     'rules': {
+      'ui:options': {
+        collapsible: true,
+        title: 'Rules',
+        defaultCollapsed: false
+      },
       'items': {
         'host': {
           'ui:widget': 'TextWidget',
@@ -80,6 +93,11 @@ export const ingressUiSchema: UiSchema = {
       }
     },
     'tls': {
+      'ui:options': {
+        collapsible: true,
+        title: 'TLS',
+        defaultCollapsed: true
+      },
       'items': {
         'hosts': {
           'items': {

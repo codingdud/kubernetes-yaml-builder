@@ -2,6 +2,10 @@ import { type UiSchema } from '@rjsf/utils';
 
 export const secretUiSchema: UiSchema = {
   'metadata': {
+    'ui:options': {
+      collapsible: true,
+      title: 'Metadata'
+    },
     'name': {
       'ui:widget': 'TextWidget',
       'ui:placeholder': 'Enter Secret name (e.g., testsecret-tls)'
@@ -22,11 +26,15 @@ export const secretUiSchema: UiSchema = {
     'ui:help': 'Select the type of secret to create'
   },
   'data': {
-    'ui:widget': 'KeyValueWidget',
-    'ui:help': 'Base64 encoded data (e.g., username: YWRtaW4=, password: MWYyZDFlMmU2N2Rm)'
+    'ui:field': 'CollapsibleKeyValueField',
+    'ui:options': {
+      title: 'Secret Data (Base64)'
+    }
   },
   'stringData': {
-    'ui:widget': 'KeyValueWidget',
-    'ui:help': 'Plain text data that will be automatically base64 encoded'
+    'ui:field': 'CollapsibleKeyValueField',
+    'ui:options': {
+      title: 'String Data'
+    }
   }
 };

@@ -2,6 +2,11 @@ import { type UiSchema } from '@rjsf/utils';
 
 export const configmapUiSchema: UiSchema = {
   'metadata': {
+    'ui:options': {
+      collapsible: true,
+      title: 'Metadata',
+      defaultCollapsed: false
+    },
     'name': {
       'ui:widget': 'TextWidget',
       'ui:placeholder': 'Enter ConfigMap name'
@@ -11,6 +16,9 @@ export const configmapUiSchema: UiSchema = {
     }
   },
   'data': {
-    'ui:widget': 'KeyValueWidget'
+    'ui:field': 'CollapsibleKeyValueField',
+    'ui:options': {
+      title: 'Data'
+    }
   }
 };

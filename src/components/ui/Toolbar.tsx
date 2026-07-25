@@ -37,6 +37,7 @@ export const Toolbar = forwardRef<HTMLDivElement, ToolbarProps>((
 
   const generalCommands = commands.filter(c => ['toggleTools', 'toggleDocs'].includes(c.id));
   const fileCommands = commands.filter(c => ['save', 'restore', 'export', 'import'].includes(c.id));
+  const verifyCommands = commands.filter(c => ['verify'].includes(c.id));
 
   return (
     <div 
@@ -119,6 +120,25 @@ export const Toolbar = forwardRef<HTMLDivElement, ToolbarProps>((
           {executingCommand === command.id ? <RotateCcwIcon className="h-4 w-4 animate-spin" /> : command.icon}
         </Button>
       ))}
+
+      {verifyCommands.length > 0 && (
+        <>
+          <div className="h-6 w-px bg-gray-200 dark:bg-gray-700" />
+          {verifyCommands.map((command) => (
+            <Button
+              key={command.id}
+              variant="ghost"
+              size="icon"
+              onClick={() => executeCommand(command.id)}
+              disabled={executingCommand === command.id}
+              title={`${command.label}${command.shortcut ? ` (${command.shortcut.join('+')})` : ''}`}
+              className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950"
+            >
+              {executingCommand === command.id ? <RotateCcwIcon className="h-4 w-4 animate-spin" /> : command.icon}
+            </Button>
+          ))}
+        </>
+      )}
     </div>
   );
 });

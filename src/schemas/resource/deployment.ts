@@ -2,178 +2,134 @@ import { type UiSchema } from '@rjsf/utils';
 
 export const deploymentUiSchema: UiSchema = {
   'metadata': {
-    'name': {
-      'ui:widget': 'TextWidget',
-      'ui:placeholder': 'Enter deployment name'
-    },
-    'namespace': {
-      'ui:widget': 'TextWidget',
-      'ui:placeholder': 'Namespace (default: default)'
-    },
-    'labels': {
-      'ui:widget': 'KeyValueWidget'
-    }
+    'ui:options': { collapsible: true, title: 'Metadata' },
+    'name': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Enter deployment name' },
+    'namespace': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Namespace (default: default)' },
+    'labels': { 'ui:widget': 'KeyValueWidget' },
   },
   'spec': {
-    'replicas': {
-      'ui:widget': 'TextWidget',
-      'ui:placeholder': 'Number of replicas'
-    },
+    'ui:options': { collapsible: true, title: 'Spec' },
+    'replicas': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Number of replicas' },
     'strategy': {
-      'type': {
-        'ui:widget': 'SelectWidget'
-      },
+      'ui:options': { collapsible: true, title: 'Deploy Strategy', defaultCollapsed: true },
+      'type': { 'ui:widget': 'SelectWidget' },
       'rollingUpdate': {
-        'maxSurge': {
-          'ui:widget': 'TextWidget',
-          'ui:placeholder': 'Max surge (e.g., 25%)'
-        },
-        'maxUnavailable': {
-          'ui:widget': 'TextWidget',
-          'ui:placeholder': 'Max unavailable (e.g., 25%)'
-        }
-      }
+        'ui:options': { collapsible: true, title: 'Rolling Update Config' },
+        'maxSurge': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Max surge (e.g., 25%)' },
+        'maxUnavailable': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Max unavailable (e.g., 25%)' },
+      },
     },
     'selector': {
-      'matchLabels': {
-        'ui:widget': 'KeyValueWidget'
-      }
+      'ui:options': { collapsible: true, title: 'Selector', defaultCollapsed: true },
+      'matchLabels': { 'ui:widget': 'KeyValueWidget' },
     },
     'template': {
+      'ui:options': { collapsible: true, title: 'Pod Template' },
       'metadata': {
-        'labels': {
-          'ui:widget': 'KeyValueWidget'
-        }
+        'ui:options': { collapsible: true, title: 'Pod Labels', defaultCollapsed: true },
+        'labels': { 'ui:widget': 'KeyValueWidget' },
       },
       'spec': {
-        'restartPolicy': {
-          'ui:widget': 'SelectWidget'
-        },
+        'ui:options': { collapsible: true, title: 'Pod Spec' },
+        'restartPolicy': { 'ui:widget': 'SelectWidget' },
         'containers': {
           'items': {
-            'name': {
-              'ui:widget': 'TextWidget',
-              'ui:placeholder': 'Container name'
-            },
-            'image': {
-              'ui:widget': 'TextWidget',
-              'ui:placeholder': 'Container image'
-            },
+            'ui:options': { collapsible: true, title: 'Container' },
+            'name': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Container name' },
+            'image': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Container image (e.g. nginx:latest)' },
             'resources': {
+              'ui:options': { collapsible: true, title: 'Resource Limits & Requests' },
               'requests': {
-                'cpu': {
-                  'ui:widget': 'TextWidget',
-                  'ui:placeholder': 'CPU request (e.g., 100m)'
-                },
-                'memory': {
-                  'ui:widget': 'TextWidget',
-                  'ui:placeholder': 'Memory request (e.g., 100Mi)'
-                }
+                'ui:options': { collapsible: true, title: 'Requests' },
+                'cpu': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'CPU request (e.g., 100m)' },
+                'memory': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Memory request (e.g., 128Mi)' },
               },
               'limits': {
-                'cpu': {
-                  'ui:widget': 'TextWidget',
-                  'ui:placeholder': 'CPU limit (e.g., 100m)'
-                },
-                'memory': {
-                  'ui:widget': 'TextWidget',
-                  'ui:placeholder': 'Memory limit (e.g., 100Mi)'
-                }
-              }
+                'ui:options': { collapsible: true, title: 'Limits' },
+                'cpu': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'CPU limit (e.g., 500m)' },
+                'memory': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Memory limit (e.g., 512Mi)' },
+              },
             },
             'ports': {
+              'ui:options': { collapsible: true, title: 'Ports', defaultCollapsed: true },
               'items': {
-                'containerPort': {
-                  'ui:widget': 'TextWidget',
-                  'ui:placeholder': 'Port number'
-                },
-                'name': {
-                  'ui:widget': 'TextWidget',
-                  'ui:placeholder': 'Port name'
-                },
-                'protocol': {
-                  'ui:widget': 'SelectWidget'
-                }
-              }
+                'containerPort': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Port number' },
+                'name': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Port name' },
+                'protocol': { 'ui:widget': 'SelectWidget' },
+              },
             },
             'env': {
+              'ui:options': { collapsible: true, title: 'Environment Variables', defaultCollapsed: true },
               'items': {
-                'name': {
-                  'ui:widget': 'TextWidget',
-                  'ui:placeholder': 'Environment variable name'
-                },
-                'value': {
-                  'ui:widget': 'TextWidget',
-                  'ui:placeholder': 'Environment variable value'
-                },
+                'name': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Variable name' },
+                'value': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Variable value' },
                 'valueFrom': {
+                  'ui:options': { collapsible: true, title: 'Value From (ConfigMap / Secret)', defaultCollapsed: true },
                   'configMapKeyRef': {
-                    'name': {
-                      'ui:widget': 'TextWidget',
-                      'ui:placeholder': 'ConfigMap name'
-                    },
-                    'key': {
-                      'ui:widget': 'TextWidget',
-                      'ui:placeholder': 'ConfigMap key'
-                    }
+                    'ui:options': { collapsible: true, title: 'ConfigMap Key Ref' },
+                    'name': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'ConfigMap name' },
+                    'key': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'ConfigMap key' },
                   },
                   'secretKeyRef': {
-                    'name': {
-                      'ui:widget': 'TextWidget',
-                      'ui:placeholder': 'Secret name'
-                    },
-                    'key': {
-                      'ui:widget': 'TextWidget',
-                      'ui:placeholder': 'Secret key'
-                    }
-                  }
-                }
-              }
+                    'ui:options': { collapsible: true, title: 'Secret Key Ref' },
+                    'name': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Secret name' },
+                    'key': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Secret key' },
+                  },
+                },
+              },
+            },
+            'livenessProbe': {
+              'ui:options': { collapsible: true, title: 'Liveness Probe', defaultCollapsed: true },
+              'httpGet': {
+                'ui:options': { collapsible: true, title: 'HTTP Get' },
+                'path': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'HTTP path (e.g., /health)' },
+                'port': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Port number' },
+              },
+              'tcpSocket': {
+                'ui:options': { collapsible: true, title: 'TCP Socket' },
+                'port': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Port number' },
+              },
+            },
+            'readinessProbe': {
+              'ui:options': { collapsible: true, title: 'Readiness Probe', defaultCollapsed: true },
+              'httpGet': {
+                'ui:options': { collapsible: true, title: 'HTTP Get' },
+                'path': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'HTTP path (e.g., /ready)' },
+                'port': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Port number' },
+              },
+              'tcpSocket': {
+                'ui:options': { collapsible: true, title: 'TCP Socket' },
+                'port': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Port number' },
+              },
             },
             'volumeMounts': {
+              'ui:options': { collapsible: true, title: 'Volume Mounts', defaultCollapsed: true },
               'items': {
-                'name': {
-                  'ui:widget': 'TextWidget',
-                  'ui:placeholder': 'Volume name'
-                },
-                'mountPath': {
-                  'ui:widget': 'TextWidget',
-                  'ui:placeholder': 'Mount path'
-                }
-              }
+                'name': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Volume name' },
+                'mountPath': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Mount path' },
+              },
             },
-            'ui:options': {
-              'label': false
-            }
-          }
+          },
         },
         'volumes': {
+          'ui:options': { collapsible: true, title: 'Volumes', defaultCollapsed: true },
           'items': {
-            'name': {
-              'ui:widget': 'TextWidget',
-              'ui:placeholder': 'Volume name'
-            },
+            'name': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Volume name' },
             'hostPath': {
-              'path': {
-                'ui:widget': 'TextWidget',
-                'ui:placeholder': 'Host path'
-              }
+              'ui:options': { collapsible: true, title: 'Host Path' },
+              'path': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Host path' },
             },
             'configMap': {
-              'name': {
-                'ui:widget': 'TextWidget',
-                'ui:placeholder': 'ConfigMap name'
-              }
+              'ui:options': { collapsible: true, title: 'ConfigMap' },
+              'name': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'ConfigMap name' },
             },
             'secret': {
-              'secretName': {
-                'ui:widget': 'TextWidget',
-                'ui:placeholder': 'Secret name'
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+              'ui:options': { collapsible: true, title: 'Secret' },
+              'secretName': { 'ui:widget': 'TextWidget', 'ui:placeholder': 'Secret name' },
+            },
+          },
+        },
+      },
+    },
+  },
 };

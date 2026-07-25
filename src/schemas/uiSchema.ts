@@ -7,3 +7,5 @@ export { jobUiSchema } from './resource/job';
 export { secretUiSchema } from './resource/secret';
 export { cronjobUiSchema } from './resource/cronjob';
 export { ingressUiSchema } from './resource/ingress';
+export { helmchartUiSchema } from './resource/helmchart';
+export { helmvaluesUiSchema } from './resource/helmvalues';

@@ -2,6 +2,10 @@ import { type UiSchema } from '@rjsf/utils';
 
 export const statefulsetUiSchema: UiSchema = {
   'metadata': {
+    'ui:options': {
+      collapsible: true,
+      title: 'Metadata'
+    },
     'name': {
       'ui:widget': 'TextWidget',
       'ui:placeholder': 'Enter StatefulSet name (e.g., nginx)'
@@ -15,6 +19,10 @@ export const statefulsetUiSchema: UiSchema = {
     }
   },
   'spec': {
+    'ui:options': {
+      collapsible: true,
+      title: 'Spec'
+    },
     'replicas': {
       'ui:widget': 'TextWidget',
       'ui:placeholder': 'Number of replicas (default: 3)'
@@ -24,22 +32,39 @@ export const statefulsetUiSchema: UiSchema = {
       'ui:placeholder': 'Service name (e.g., nginx)'
     },
     'selector': {
+      'ui:options': {
+        collapsible: true,
+        title: 'Selector',
+        defaultCollapsed: true
+      },
       'matchLabels': {
         'ui:widget': 'KeyValueWidget'
       }
     },
     'template': {
+      'ui:options': {
+        collapsible: true,
+        title: 'Pod Template'
+      },
       'metadata': {
         'labels': {
           'ui:widget': 'KeyValueWidget'
         }
       },
       'spec': {
+        'ui:options': {
+          collapsible: true,
+          title: 'Pod Spec'
+        },
         'terminationGracePeriodSeconds': {
           'ui:widget': 'TextWidget',
           'ui:placeholder': 'Termination grace period (seconds)'
         },
         'containers': {
+          'ui:options': {
+            collapsible: true,
+            title: 'Containers'
+          },
           'items': {
             'name': {
               'ui:widget': 'TextWidget',
@@ -50,6 +75,10 @@ export const statefulsetUiSchema: UiSchema = {
               'ui:placeholder': 'Container image (e.g., nginx-slim:1.16.1)'
             },
             'ports': {
+              'ui:options': {
+                collapsible: true,
+                title: 'Ports'
+              },
               'items': {
                 'containerPort': {
                   'ui:widget': 'TextWidget',
@@ -65,6 +94,10 @@ export const statefulsetUiSchema: UiSchema = {
               }
             },
             'volumeMounts': {
+              'ui:options': {
+                collapsible: true,
+                title: 'Volume Mounts'
+              },
               'items': {
                 'name': {
                   'ui:widget': 'TextWidget',
@@ -77,6 +110,11 @@ export const statefulsetUiSchema: UiSchema = {
               }
             },
             'resources': {
+              'ui:options': {
+                collapsible: true,
+                title: 'Resources',
+                defaultCollapsed: true
+              },
               'requests': {
                 'cpu': {
                   'ui:widget': 'TextWidget',
@@ -102,10 +140,21 @@ export const statefulsetUiSchema: UiSchema = {
               'label': false
             }
           }
+        },
+        'volumes': {
+          'ui:options': {
+            collapsible: true,
+            title: 'Volumes',
+            defaultCollapsed: true
+          }
         }
       }
     },
     'volumeClaimTemplates': {
+      'ui:options': {
+        collapsible: true,
+        title: 'Volume Claims'
+      },
       'items': {
         'metadata': {
           'name': {
