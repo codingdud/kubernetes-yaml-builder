@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useMemo, useRef } from 'react';
+import React, { useCallback, useState, useMemo, useRef, useEffect } from 'react';
 import { ReactFlow, useNodesState, useEdgesState, addEdge, MiniMap, Controls, Background, type Connection, type Edge, ReactFlowProvider, useReactFlow, type Node, type NodeProps, ConnectionMode, type ReactFlowInstance } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { type K8sNode } from '../../types/reactFlow';
@@ -14,7 +14,8 @@ import VerifyPanel from '../verify/VerifyPanel';
 import * as yaml from 'js-yaml';
 import { useCommands } from '../../hooks/useCommands';
 import { type Command } from '../../types/command';
-import { Save, RotateCcw, Download, Upload, LucideWrench, LucideBookOpen, ShieldCheck } from 'lucide-react';
+import { Download, Upload, LucideWrench, LucideBookOpen, ShieldCheck, Undo2, Redo2 } from 'lucide-react';
+import { useFlowHistory, type FlowSnapshot } from '../../hooks/useFlowHistory';
 
 const FlowEditorInner: React.FC = () => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
@@ -22,20 +23,75 @@ const FlowEditorInner: React.FC = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [nextId, setNextId] = useState(1);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(320);
+  const dragging = useRef(false);
+  const dragStartX = useRef(0);
+  const dragStartWidth = useRef(0);
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!dragging.current) return;
+      const dx = dragStartX.current - e.clientX;
+      setSidebarWidth(Math.max(200, Math.min(700, dragStartWidth.current + dx)));
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    };
+    const onUp = () => {
+      dragging.current = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, []);
+
+  const onDragHandleMouseDown = useCallback((e: React.MouseEvent) => {
+    dragging.current = true;
+    dragStartX.current = e.clientX;
+    dragStartWidth.current = sidebarWidth;
+    e.preventDefault();
+  }, [sidebarWidth]);
   const [isToolsOpen, setIsToolsOpen] = useState(false);
   const [isDocsOpen, setIsDocsOpen] = useState(false);
   const [isVerifyOpen, setIsVerifyOpen] = useState(false);
   const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
 
+  const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
+  const { screenToFlowPosition, setViewport, getNodes } = useReactFlow();
+  const { type, setType } = useDnD();
+
   const handleRemoveNodes = useCallback((nodeIds: string[]) => {
     setNodes(currentNodes => currentNodes.filter(node => !nodeIds.includes(node.id)));
     setNotification({message: `Removed ${nodeIds.length} resources`, type: 'success'});
     setTimeout(() => setNotification(null), 3000);
   }, [setNodes]);
-  const { screenToFlowPosition, setViewport, getNodes } = useReactFlow();
-  const { type, setType } = useDnD();
-  const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
+
+  const handleRestoreSnapshot = useCallback((snapshot: FlowSnapshot) => {
+    setNodes(snapshot.nodes);
+    setEdges(snapshot.edges);
+    setViewport(snapshot.viewport);
+    if (snapshot.nodes.length > 0) {
+      const maxId = Math.max(...snapshot.nodes.map(n => parseInt(n.id.replace(/\D/g, '') || '0')));
+      setNextId(maxId + 1);
+    }
+  }, [setNodes, setEdges, setViewport]);
+
+  const {
+    pushSnapshot,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    checkpoints,
+    saveCheckpoint,
+    restoreCheckpoint,
+    lastSavedAt,
+  } = useFlowHistory(rfInstance, handleRestoreSnapshot);
 
   const handleImport = useCallback((jsonString: string) => {
     try {
@@ -102,28 +158,20 @@ const FlowEditorInner: React.FC = () => {
 
   const commands: Command[] = useMemo(() => [
     {
-      id: 'save',
-      label: 'Save Flow',
-      icon: <Save className="h-4 w-4" />,
-      shortcut: ['s'],
-      execute: async () => {
-        if (rfInstance) {
-          const flow = rfInstance.toObject();
-          localStorage.setItem('kubernetes-yaml-flow', JSON.stringify({ ...flow, lastSaved: new Date().toISOString() }));
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
-      }
+      id: 'back',
+      label: 'Back',
+      icon: <Undo2 className="h-4 w-4" />,
+      shortcut: ['z'],
+      canExecute: () => canUndo,
+      execute: undo,
     },
     {
-      id: 'restore',
-      label: 'Restore Flow',
-      icon: <RotateCcw className="h-4 w-4" />,
-      shortcut: ['r'],
-      execute: async () => {
-        const stored = localStorage.getItem('kubernetes-yaml-flow');
-        if (stored) handleImport(stored);
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
+      id: 'forward',
+      label: 'Forward',
+      icon: <Redo2 className="h-4 w-4" />,
+      shortcut: ['y'],
+      canExecute: () => canRedo,
+      execute: redo,
     },
     {
       id: 'export',
@@ -189,7 +237,7 @@ const FlowEditorInner: React.FC = () => {
       shortcut: ['v'],
       execute: () => setIsVerifyOpen(o => !o),
     },
-  ], [rfInstance, handleImport, setIsToolsOpen, setIsDocsOpen, setIsVerifyOpen]);
+  ], [rfInstance, handleImport, canUndo, canRedo, undo, redo, setIsToolsOpen, setIsDocsOpen, setIsVerifyOpen]);
 
   const { executeCommand, executingCommand } = useCommands(commands);
 
@@ -211,6 +259,16 @@ const FlowEditorInner: React.FC = () => {
   const edgeTypes = useMemo(() => ({
     dataEdge: DataEdge
   }), []);
+
+  const wrappedOnNodesChange = useCallback((changes: Parameters<typeof onNodesChange>[0]) => {
+    if (rfInstance) pushSnapshot(rfInstance.toObject() as FlowSnapshot);
+    onNodesChange(changes);
+  }, [onNodesChange, rfInstance, pushSnapshot]);
+
+  const wrappedOnEdgesChange = useCallback((changes: Parameters<typeof onEdgesChange>[0]) => {
+    if (rfInstance) pushSnapshot(rfInstance.toObject() as FlowSnapshot);
+    onEdgesChange(changes);
+  }, [onEdgesChange, rfInstance, pushSnapshot]);
 
   const onConnect = useCallback((connection: Connection) => {
     const allNodes = getNodes();
@@ -310,15 +368,16 @@ const FlowEditorInner: React.FC = () => {
 
   return (
     <div className="flex h-full">
-      <div 
-        className={`${isSidebarCollapsed ? 'w-full' : 'w-3/4'} h-full transition-all duration-300`}
+      <div
+        style={{ width: isSidebarCollapsed ? '100%' : `calc(100% - ${sidebarWidth + 4}px)` }}
+        className="h-full flex-shrink-0"
         ref={reactFlowWrapper}
       >
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
+          onNodesChange={wrappedOnNodesChange}
+          onEdgesChange={wrappedOnEdgesChange}
           onConnect={onConnect}
           onDrop={onDrop}
           onDragOver={onDragOver}
@@ -340,13 +399,24 @@ const FlowEditorInner: React.FC = () => {
             executeCommand={executeCommand}
             onAddNode={(kind) => addNode(kind as keyof typeof resourceRegistry)}
             onDragStart={onDragStartFromToolbar}
+            lastSavedAt={lastSavedAt}
+            checkpoints={checkpoints}
+            onRestoreCheckpoint={restoreCheckpoint}
+            onSaveCheckpoint={() => saveCheckpoint('Manual save')}
           />
           <MiniMap />
           <Controls />
           <Background />
         </ReactFlow>
       </div>
+      {!isSidebarCollapsed && (
+        <div
+          onMouseDown={onDragHandleMouseDown}
+          className="w-1 flex-shrink-0 bg-gray-200 dark:bg-gray-700 hover:bg-blue-400 dark:hover:bg-blue-500 cursor-col-resize transition-colors"
+        />
+      )}
       <Sidebar
+        sidebarWidth={sidebarWidth}
         onAddNode={addNode}
         yaml={generateYAML()}
         nodes={nodes}

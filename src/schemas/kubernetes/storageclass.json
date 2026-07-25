@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "provisioner"],
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "enum": ["storage.k8s.io/v1"],
+      "default": "storage.k8s.io/v1"
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["StorageClass"],
+      "default": "StorageClass"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "labels": { "$ref": "#/definitions/keyValuePairs" },
+        "annotations": { "$ref": "#/definitions/keyValuePairs" }
+      }
+    },
+    "provisioner": {
+      "type": "string"
+    },
+    "parameters": {
+      "$ref": "#/definitions/keyValuePairs"
+    },
+    "reclaimPolicy": {
+      "type": "string",
+      "enum": ["Delete", "Retain", "Recycle"],
+      "default": "Delete"
+    },
+    "volumeBindingMode": {
+      "type": "string",
+      "enum": ["Immediate", "WaitForFirstConsumer"],
+      "default": "WaitForFirstConsumer"
+    },
+    "allowVolumeExpansion": {
+      "type": "string",
+      "enum": ["true", "false"],
+      "default": "true"
+    },
+    "mountOptions": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "definitions": {
+    "keyValuePairs": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  }
+}

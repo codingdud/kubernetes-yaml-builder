@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "enum": ["snapshot.storage.k8s.io/v1"],
+      "default": "snapshot.storage.k8s.io/v1"
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["VolumeSnapshotContent"],
+      "default": "VolumeSnapshotContent"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "labels": { "$ref": "#/definitions/keyValuePairs" }
+      }
+    },
+    "spec": {
+      "type": "object",
+      "required": ["deletionPolicy", "driver"],
+      "properties": {
+        "deletionPolicy": {
+          "type": "string",
+          "enum": ["Delete", "Retain"],
+          "default": "Delete"
+        },
+        "driver": { "type": "string" },
+        "volumeSnapshotClassName": { "type": "string" },
+        "source": {
+          "type": "object",
+          "properties": {
+            "snapshotHandle": { "type": "string" },
+            "volumeHandle": { "type": "string" }
+          }
+        },
+        "volumeSnapshotRef": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "namespace": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "keyValuePairs": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  }
+}

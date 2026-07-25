@@ -9,11 +9,19 @@ import cronjobSchema from '../schemas/kubernetes/cronjob.json';
 import ingressSchema from '../schemas/kubernetes/ingress.json';
 import helmchartSchema from '../schemas/kubernetes/helmchart.json';
 import helmvaluesSchema from '../schemas/kubernetes/helmvalues.json';
+import replicasetSchema from '../schemas/kubernetes/replicaset.json';
+import storageclassSchema from '../schemas/kubernetes/storageclass.json';
+import volumesnapshotSchema from '../schemas/kubernetes/volumesnapshot.json';
+import volumesnapshotcontentSchema from '../schemas/kubernetes/volumesnapshotcontent.json';
+import volumesnapshotclassSchema from '../schemas/kubernetes/volumesnapshotclass.json';
+import persistentvolumeclaimSchema from '../schemas/kubernetes/persistentvolumeclaim.json';
 
 import {
   deploymentUiSchema, serviceUiSchema, statefulsetUiSchema, daemonsetUiSchema,
   configmapUiSchema, jobUiSchema, secretUiSchema, cronjobUiSchema, ingressUiSchema,
-  helmchartUiSchema, helmvaluesUiSchema,
+  helmchartUiSchema, helmvaluesUiSchema, replicasetUiSchema,
+  storageclassUiSchema, volumesnapshotUiSchema, volumesnapshotcontentUiSchema, volumesnapshotclassUiSchema,
+  persistentvolumeclaimUiSchema,
 } from '../schemas/uiSchema';
 
 import ResourceNode from '../components/flow/nodes/ResourceNode';
@@ -78,6 +86,50 @@ const resourceRegistry = {
     uiSchema: ingressUiSchema,
     NodeComponent: ResourceNode,
     defaultResource: { apiVersion: 'networking.k8s.io/v1', kind: 'Ingress', metadata: { name: '' } }
+  },
+  ReplicaSet: {
+    schema: replicasetSchema,
+    uiSchema: replicasetUiSchema,
+    NodeComponent: ResourceNode,
+    defaultResource: { apiVersion: 'apps/v1', kind: 'ReplicaSet', metadata: { name: '' }, spec: { replicas: 1 } }
+  },
+  StorageClass: {
+    schema: storageclassSchema,
+    uiSchema: storageclassUiSchema,
+    NodeComponent: ResourceNode,
+    defaultResource: { apiVersion: 'storage.k8s.io/v1', kind: 'StorageClass', metadata: { name: '' } }
+  },
+  VolumeSnapshot: {
+    schema: volumesnapshotSchema,
+    uiSchema: volumesnapshotUiSchema,
+    NodeComponent: ResourceNode,
+    defaultResource: { apiVersion: 'snapshot.storage.k8s.io/v1', kind: 'VolumeSnapshot', metadata: { name: '' } }
+  },
+  VolumeSnapshotContent: {
+    schema: volumesnapshotcontentSchema,
+    uiSchema: volumesnapshotcontentUiSchema,
+    NodeComponent: ResourceNode,
+    defaultResource: { apiVersion: 'snapshot.storage.k8s.io/v1', kind: 'VolumeSnapshotContent', metadata: { name: '' } }
+  },
+  VolumeSnapshotClass: {
+    schema: volumesnapshotclassSchema,
+    uiSchema: volumesnapshotclassUiSchema,
+    NodeComponent: ResourceNode,
+    defaultResource: { apiVersion: 'snapshot.storage.k8s.io/v1', kind: 'VolumeSnapshotClass', metadata: { name: '' }, deletionPolicy: 'Delete' }
+  },
+  PersistentVolumeClaim: {
+    schema: persistentvolumeclaimSchema,
+    uiSchema: persistentvolumeclaimUiSchema,
+    NodeComponent: ResourceNode,
+    defaultResource: {
+      apiVersion: 'v1',
+      kind: 'PersistentVolumeClaim',
+      metadata: { name: '' },
+      spec: {
+        accessModes: ['ReadWriteOnce'],
+        resources: { requests: { storage: '1Gi' } }
+      }
+    }
   },
   HelmChart: {
     schema: helmchartSchema,
