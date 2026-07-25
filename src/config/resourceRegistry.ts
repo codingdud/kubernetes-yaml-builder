@@ -141,7 +141,7 @@ const resourceRegistry = {
     schema: helmvaluesSchema,
     uiSchema: helmvaluesUiSchema,
     NodeComponent: ResourceNode,
-    defaultResource: { kind: 'HelmValues', content: '' }
+    defaultResource: { kind: 'HelmValues', content: '', autoSync: true }
   },
 };
 

@@ -16,6 +16,8 @@ import { useCommands } from '../../hooks/useCommands';
 import { type Command } from '../../types/command';
 import { Download, Upload, LucideWrench, LucideBookOpen, ShieldCheck, Undo2, Redo2 } from 'lucide-react';
 import { useFlowHistory, type FlowSnapshot } from '../../hooks/useFlowHistory';
+import { generateValuesYaml } from '../../utils/helmGenerator';
+import { HelmSyncContext } from '../../contexts/HelmSyncContext';
 
 const FlowEditorInner: React.FC = () => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
@@ -48,6 +50,53 @@ const FlowEditorInner: React.FC = () => {
       window.removeEventListener('mouseup', onUp);
     };
   }, []);
+
+  // Compute generated values.yaml from non-Helm nodes
+  const resourceNodes = useMemo(
+    () => (nodes as K8sNode[]).filter(
+      n => !['HelmChart', 'HelmValues'].includes(String((n.data.resource as any)?.kind))
+    ),
+    [nodes]
+  );
+
+  const generatedValues = useMemo(
+    () => resourceNodes.length > 0 ? generateValuesYaml(resourceNodes) : '',
+    [resourceNodes]
+  );
+
+  // Auto-sync: when resource nodes change and HelmValues has autoSync=true, update its content
+  useEffect(() => {
+    if (!generatedValues) return;
+    setNodes(nds => {
+      const hvIdx = nds.findIndex(n => (n as K8sNode).data.resource?.kind === 'HelmValues');
+      if (hvIdx === -1) return nds;
+      const hv = nds[hvIdx] as K8sNode;
+      if (!(hv.data.resource as any)?.autoSync) return nds;
+      if ((hv.data.resource as any)?.content === generatedValues) return nds;
+      const updated = [...nds];
+      updated[hvIdx] = {
+        ...hv,
+        data: { ...hv.data, resource: { ...(hv.data.resource as any), content: generatedValues } },
+      };
+      return updated;
+    });
+  }, [generatedValues, setNodes]);
+
+  // One-shot sync: copy generatedValues into the HelmValues node, keep autoSync=false
+  const setNodeAutoSync = useCallback((_nodeId: string, _autoSync: boolean) => {
+    setNodes(nds => {
+      const hvIdx = nds.findIndex(n => (n as K8sNode).data.resource?.kind === 'HelmValues');
+      if (hvIdx === -1) return nds;
+      const hv = nds[hvIdx] as K8sNode;
+      if ((hv.data.resource as any)?.content === generatedValues) return nds;
+      const updated = [...nds];
+      updated[hvIdx] = {
+        ...hv,
+        data: { ...hv.data, resource: { ...(hv.data.resource as any), autoSync: false, content: generatedValues } },
+      };
+      return updated;
+    });
+  }, [setNodes, generatedValues]);
 
   const onDragHandleMouseDown = useCallback((e: React.MouseEvent) => {
     dragging.current = true;
@@ -367,6 +416,7 @@ const FlowEditorInner: React.FC = () => {
   };
 
   return (
+    <HelmSyncContext.Provider value={{ generatedValues, setNodeAutoSync }}>
     <div className="flex h-full">
       <div
         style={{ width: isSidebarCollapsed ? '100%' : `calc(100% - ${sidebarWidth + 4}px)` }}
@@ -452,6 +502,7 @@ const FlowEditorInner: React.FC = () => {
         </div>
       )}
     </div>
+    </HelmSyncContext.Provider>
   );
 };
 

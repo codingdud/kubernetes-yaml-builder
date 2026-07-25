@@ -89,7 +89,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 `;
 }
 
-function generateValuesYaml(nodes: K8sNode[]): string {
+export function generateValuesYaml(nodes: K8sNode[]): string {
   const values: Record<string, any> = {
     nameOverride: '',
     fullnameOverride: '',
@@ -107,26 +107,51 @@ function generateValuesYaml(nodes: K8sNode[]): string {
       case 'deployment':
       case 'statefulset': {
         const spec = (resource?.spec || {}) as any;
-        const containers = spec?.template?.spec?.containers || [];
-        const c = containers[0] || {};
-        const image = parseImage(c.image || 'nginx:latest');
-        values[kind][key] = {
-          replicaCount: spec.replicas ?? 1,
-          image: { repository: image.repository, tag: image.tag, pullPolicy: c.imagePullPolicy || 'IfNotPresent' },
-        };
-        if (c.ports?.[0]?.containerPort) {
-          values[kind][key].containerPort = c.ports[0].containerPort;
+        const containers: any[] = spec?.template?.spec?.containers || [];
+        const replicaCount = spec.replicas ?? 1;
+        if (containers.length <= 1) {
+          const c = containers[0] || {};
+          const image = parseImage(c.image || 'nginx:latest');
+          values[kind][key] = {
+            replicaCount,
+            image: { repository: image.repository, tag: image.tag, pullPolicy: c.imagePullPolicy || 'IfNotPresent' },
+          };
+          if (c.ports?.[0]?.containerPort) values[kind][key].containerPort = c.ports[0].containerPort;
+        } else {
+          const containerMap: Record<string, any> = {};
+          containers.forEach((c: any) => {
+            const cKey = sanitizeKey(c.name || 'container');
+            const image = parseImage(c.image || 'nginx:latest');
+            const entry: Record<string, any> = {
+              image: { repository: image.repository, tag: image.tag, pullPolicy: c.imagePullPolicy || 'IfNotPresent' },
+            };
+            if (c.ports?.[0]?.containerPort) entry.containerPort = c.ports[0].containerPort;
+            containerMap[cKey] = entry;
+          });
+          values[kind][key] = { replicaCount, containers: containerMap };
         }
         break;
       }
       case 'daemonset': {
         const spec = (resource?.spec || {}) as any;
-        const containers = spec?.template?.spec?.containers || [];
-        const c = containers[0] || {};
-        const image = parseImage(c.image || 'nginx:latest');
-        values[kind][key] = {
-          image: { repository: image.repository, tag: image.tag, pullPolicy: c.imagePullPolicy || 'IfNotPresent' },
-        };
+        const containers: any[] = spec?.template?.spec?.containers || [];
+        if (containers.length <= 1) {
+          const c = containers[0] || {};
+          const image = parseImage(c.image || 'nginx:latest');
+          values[kind][key] = {
+            image: { repository: image.repository, tag: image.tag, pullPolicy: c.imagePullPolicy || 'IfNotPresent' },
+          };
+        } else {
+          const containerMap: Record<string, any> = {};
+          containers.forEach((c: any) => {
+            const cKey = sanitizeKey(c.name || 'container');
+            const image = parseImage(c.image || 'nginx:latest');
+            containerMap[cKey] = {
+              image: { repository: image.repository, tag: image.tag, pullPolicy: c.imagePullPolicy || 'IfNotPresent' },
+            };
+          });
+          values[kind][key] = { containers: containerMap };
+        }
         break;
       }
       case 'service': {
