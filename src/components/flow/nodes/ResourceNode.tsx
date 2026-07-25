@@ -169,7 +169,7 @@ const ResourceNode: React.FC<ResourceNodeProps> = memo(({ id, data }) => {
       {/* Form body */}
       {!isFormCollapsed && (
         <div
-          className={`p-3 overflow-y-auto nowheel ${hasStoredHeight ? 'flex-1 min-h-0' : 'max-h-[580px]'}`}
+          className={`p-3 overflow-y-auto scrollbar-hide nowheel ${hasStoredHeight ? 'flex-1 min-h-0' : 'max-h-[580px]'}`}
           onScroll={() => updateNodeInternals(id)}
         >
           <DynamicK8sForm nodeData={data} nodeId={id} />

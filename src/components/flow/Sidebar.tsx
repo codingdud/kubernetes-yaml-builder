@@ -72,7 +72,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <div
-      className="bg-gray-100 dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 overflow-auto relative flex-shrink-0"
+      className="bg-gray-100 dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 overflow-auto scrollbar-hide relative flex-shrink-0"
       style={{ width: sidebarWidth ?? 320 }}
     >
       <div className="p-2">
