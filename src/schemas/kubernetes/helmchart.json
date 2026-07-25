@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Helm Chart",
+  "type": "object",
+  "required": ["name", "version"],
+  "properties": {
+    "kind":        { "type": "string", "const": "HelmChart",     "default": "HelmChart" },
+    "apiVersion":  { "type": "string", "const": "v2",           "default": "v2" },
+    "name":        { "type": "string", "title": "Chart Name" },
+    "description": { "type": "string", "title": "Description" },
+    "type":        { "type": "string", "title": "Type", "enum": ["application", "library"], "default": "application" },
+    "version":     { "type": "string", "title": "Chart Version", "default": "0.1.0" },
+    "appVersion":  { "type": "string", "title": "App Version",   "default": "1.0.0" }
+  }
+}

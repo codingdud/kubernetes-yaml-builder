@@ -7,10 +7,13 @@ import jobSchema from '../schemas/kubernetes/job.json';
 import secretSchema from '../schemas/kubernetes/secret.json';
 import cronjobSchema from '../schemas/kubernetes/cronjob.json';
 import ingressSchema from '../schemas/kubernetes/ingress.json';
+import helmchartSchema from '../schemas/kubernetes/helmchart.json';
+import helmvaluesSchema from '../schemas/kubernetes/helmvalues.json';
 
 import {
   deploymentUiSchema, serviceUiSchema, statefulsetUiSchema, daemonsetUiSchema,
-  configmapUiSchema, jobUiSchema, secretUiSchema, cronjobUiSchema, ingressUiSchema
+  configmapUiSchema, jobUiSchema, secretUiSchema, cronjobUiSchema, ingressUiSchema,
+  helmchartUiSchema, helmvaluesUiSchema,
 } from '../schemas/uiSchema';
 
 import ResourceNode from '../components/flow/nodes/ResourceNode';
@@ -75,7 +78,19 @@ const resourceRegistry = {
     uiSchema: ingressUiSchema,
     NodeComponent: ResourceNode,
     defaultResource: { apiVersion: 'networking.k8s.io/v1', kind: 'Ingress', metadata: { name: '' } }
-  }
+  },
+  HelmChart: {
+    schema: helmchartSchema,
+    uiSchema: helmchartUiSchema,
+    NodeComponent: ResourceNode,
+    defaultResource: { kind: 'HelmChart', apiVersion: 'v2', name: 'my-chart', description: '', type: 'application', version: '0.1.0', appVersion: '1.0.0' }
+  },
+  HelmValues: {
+    schema: helmvaluesSchema,
+    uiSchema: helmvaluesUiSchema,
+    NodeComponent: ResourceNode,
+    defaultResource: { kind: 'HelmValues', content: '' }
+  },
 };
 
 export default resourceRegistry;

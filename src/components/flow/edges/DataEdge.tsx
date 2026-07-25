@@ -28,13 +28,25 @@ const DataEdge: React.FC<EdgeProps> = ({
 
   return (
     <g>
+      <defs>
+        <marker
+          id={`arrowhead-${id}`}
+          markerWidth="10"
+          markerHeight="7"
+          refX="9"
+          refY="3.5"
+          orient="auto"
+        >
+          <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6" />
+        </marker>
+      </defs>
       <path
         id={id as string}
         d={edgePath}
         stroke="#3b82f6"
         strokeWidth={2}
         fill="none"
-        markerEnd="url(#arrowhead)"
+        markerEnd={`url(#arrowhead-${id})`}
       />
       {(data as any)?.label && (
         <>

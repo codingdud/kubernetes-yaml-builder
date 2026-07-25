@@ -4,15 +4,17 @@ import '@xyflow/react/dist/style.css';
 import { type K8sNode } from '../../types/reactFlow';
 import Sidebar from './Sidebar';
 import resourceRegistry from '../../config/resourceRegistry';
+import type { HelmTemplateNode } from '../../data/helmStarterTemplates';
 import { useDnD } from './DnDContext';
 import DataEdge from './edges/DataEdge';
 import { Toolbar } from '../ui/Toolbar';
 import DocsModal from '../docsmodal/DocsModal';
 import ToolsModal from '../toolmodal/ToolsModal';
+import VerifyPanel from '../verify/VerifyPanel';
 import * as yaml from 'js-yaml';
 import { useCommands } from '../../hooks/useCommands';
 import { type Command } from '../../types/command';
-import { Save, RotateCcw, Download, Upload, LucideWrench, LucideBookOpen } from 'lucide-react';
+import { Save, RotateCcw, Download, Upload, LucideWrench, LucideBookOpen, ShieldCheck } from 'lucide-react';
 
 const FlowEditorInner: React.FC = () => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
@@ -22,6 +24,8 @@ const FlowEditorInner: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isToolsOpen, setIsToolsOpen] = useState(false);
   const [isDocsOpen, setIsDocsOpen] = useState(false);
+  const [isVerifyOpen, setIsVerifyOpen] = useState(false);
+  const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
 
   const handleRemoveNodes = useCallback((nodeIds: string[]) => {
@@ -29,7 +33,7 @@ const FlowEditorInner: React.FC = () => {
     setNotification({message: `Removed ${nodeIds.length} resources`, type: 'success'});
     setTimeout(() => setNotification(null), 3000);
   }, [setNodes]);
-  const { screenToFlowPosition, setViewport } = useReactFlow();
+  const { screenToFlowPosition, setViewport, getNodes } = useReactFlow();
   const { type, setType } = useDnD();
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
 
@@ -70,6 +74,7 @@ const FlowEditorInner: React.FC = () => {
                 schema: schema as Record<string, unknown>,
                 uiSchema,
               },
+              style: { width: 384 },
             };
             newNodes.push(newNode);
           }
@@ -177,7 +182,14 @@ const FlowEditorInner: React.FC = () => {
       shortcut: ['d'],
       execute: () => setIsDocsOpen(o => !o),
     },
-  ], [rfInstance, handleImport, setIsToolsOpen, setIsDocsOpen]);
+    {
+      id: 'verify',
+      label: 'Verify Resources',
+      icon: <ShieldCheck className="h-4 w-4" />,
+      shortcut: ['v'],
+      execute: () => setIsVerifyOpen(o => !o),
+    },
+  ], [rfInstance, handleImport, setIsToolsOpen, setIsDocsOpen, setIsVerifyOpen]);
 
   const { executeCommand, executingCommand } = useCommands(commands);
 
@@ -201,20 +213,23 @@ const FlowEditorInner: React.FC = () => {
   }), []);
 
   const onConnect = useCallback((connection: Connection) => {
-    const sourceField = connection.sourceHandle?.replace(`${connection.source}_`, '').replace('_source', '') || 'source';
-    const targetField = connection.targetHandle?.replace(`${connection.target}_`, '').replace('_target', '') || 'target';
-    
+    const allNodes = getNodes();
+    const sourceNode = allNodes.find(n => n.id === connection.source) as K8sNode | undefined;
+    const targetNode = allNodes.find(n => n.id === connection.target) as K8sNode | undefined;
+    const sourceLabel = sourceNode?.data?.resource?.kind || connection.source;
+    const targetLabel = targetNode?.data?.resource?.kind || connection.target;
+
     const newEdge = {
       ...connection,
       id: `${connection.source}-${connection.target}-${Date.now()}`,
       type: 'dataEdge' as const,
       animated: true,
       data: {
-        label: `${sourceField} → ${targetField}`
+        label: `${sourceLabel} → ${targetLabel}`
       }
     } as const;
     setEdges((eds) => addEdge(newEdge as Edge, eds));
-  }, [setEdges]);
+  }, [setEdges, getNodes]);
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
@@ -228,14 +243,37 @@ const FlowEditorInner: React.FC = () => {
         id: `${nextId}`,
         type: kind.toLowerCase(),
         position: position || { x: Math.random() * 500, y: Math.random() * 500 },
-        data: { 
-          resource: { ...defaultResource }, 
+        data: {
+          resource: { ...defaultResource },
           schema: schema as Record<string, unknown>,
           uiSchema
-        }
+        },
+        style: { width: 384 },
       };
       setNodes((nds) => [...nds, newNode]);
       setNextId(nextId + 1);
+    },
+    [nextId, setNodes, setNextId]
+  );
+
+  const addNodesFromTemplate = useCallback(
+    (items: HelmTemplateNode[]) => {
+      const newNodes = items.map((item, i) => {
+        const { schema, uiSchema } = resourceRegistry[item.kind as keyof typeof resourceRegistry];
+        return {
+          id: `${nextId + i}`,
+          type: item.kind.toLowerCase(),
+          position: item.position,
+          data: {
+            resource: item.resource,
+            schema: schema as Record<string, unknown>,
+            uiSchema,
+          },
+          style: { width: 384 },
+        } as K8sNode;
+      });
+      setNodes((nds) => [...nds, ...newNodes]);
+      setNextId((id) => id + items.length);
     },
     [nextId, setNodes, setNextId]
   );
@@ -264,12 +302,10 @@ const FlowEditorInner: React.FC = () => {
   );
 
   const generateYAML = () => {
-    if (nodes.length === 0) return '';
-    const yamlDocs = nodes.map((node) => {
-      const k8sNode = node as K8sNode;
-      return yaml.dump(k8sNode.data.resource, { indent: 2 });
-    });
-    return yamlDocs.join('---\n');
+    const helmKinds = new Set(['HelmChart', 'HelmValues']);
+    const k8sNodes = nodes.filter((n) => !helmKinds.has(String((n as K8sNode).data.resource?.kind)));
+    if (k8sNodes.length === 0) return '';
+    return k8sNodes.map((node) => yaml.dump((node as K8sNode).data.resource, { indent: 2 })).join('---\n');
   };
 
   return (
@@ -295,6 +331,7 @@ const FlowEditorInner: React.FC = () => {
           zoomOnScroll={true}
           zoomOnPinch={true}
           onInit={setRfInstance}
+          onSelectionChange={({ nodes: sel }) => setSelectedNodes(sel)}
           fitView
         >
           <Toolbar
@@ -309,12 +346,14 @@ const FlowEditorInner: React.FC = () => {
           <Background />
         </ReactFlow>
       </div>
-      <Sidebar 
-        onAddNode={addNode} 
-        yaml={generateYAML()} 
+      <Sidebar
+        onAddNode={addNode}
+        yaml={generateYAML()}
+        nodes={nodes}
         onCollapseChange={setIsSidebarCollapsed}
         onImportYaml={handleYamlImport}
         onRemoveNodes={handleRemoveNodes}
+        onAddTemplate={addNodesFromTemplate}
         onNotification={(message, type = 'error') => {
           setNotification({message, type});
           setTimeout(() => setNotification(null), 3000);
@@ -334,6 +373,7 @@ const FlowEditorInner: React.FC = () => {
       />
       <DocsModal isOpen={isDocsOpen} onClose={() => setIsDocsOpen(false)} />
       <ToolsModal isOpen={isToolsOpen} onClose={() => setIsToolsOpen(false)} />
+      <VerifyPanel isOpen={isVerifyOpen} onClose={() => setIsVerifyOpen(false)} nodes={nodes} selectedNodes={selectedNodes} />
       {notification && (
         <div className={`fixed top-20 right-4 z-50 text-white px-4 py-2 rounded-lg shadow-lg ${
           notification.type === 'success' ? 'bg-green-600' : 'bg-red-600'

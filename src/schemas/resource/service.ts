@@ -2,6 +2,10 @@ import { type UiSchema } from '@rjsf/utils';
 
 export const serviceUiSchema: UiSchema = {
   'metadata': {
+    'ui:options': {
+      collapsible: true,
+      title: 'Metadata'
+    },
     'name': {
       'ui:widget': 'TextWidget',
       'ui:placeholder': 'Enter service name (e.g., MYAPP)'
@@ -15,11 +19,20 @@ export const serviceUiSchema: UiSchema = {
     }
   },
   'spec': {
+    'ui:options': {
+      collapsible: true,
+      title: 'Service Spec'
+    },
     'type': {
       'ui:widget': 'SelectWidget'
     },
     'selector': {
-      'ui:widget': 'KeyValueWidget'
+      'ui:widget': 'KeyValueWidget',
+      'ui:options': {
+        collapsible: true,
+        title: 'Selector',
+        defaultCollapsed: true
+      }
     },
     'sessionAffinity': {
       'ui:widget': 'SelectWidget'
@@ -45,6 +58,10 @@ export const serviceUiSchema: UiSchema = {
       'ui:placeholder': 'External DNS name'
     },
     'ports': {
+      'ui:options': {
+        collapsible: true,
+        title: 'Ports'
+      },
       'items': {
         'name': {
           'ui:widget': 'TextWidget',
