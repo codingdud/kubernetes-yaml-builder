@@ -1,9 +1,8 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Helm Values",
   "type": "object",
   "properties": {
-    "kind":    { "type": "string", "const": "HelmValues", "default": "HelmValues" },
-    "content": { "type": "string", "title": "values.yaml" }
+    "kind":      { "type": "string",  "const":   "HelmValues" },
+    "content":   { "type": "string" },
+    "autoSync":  { "type": "boolean", "default": true }
   }
 }

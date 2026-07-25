@@ -8,6 +8,7 @@ import CustomTextWidget from './widgets/CustomTextWidget';
 import CustomSelectWidget from './widgets/CustomSelectWidget';
 import CustomTextareaWidget from './widgets/CustomTextareaWidget';
 import MultiSelectWidget from './widgets/MultiSelectWidget';
+import HelmValuesWidget from './widgets/HelmValuesWidget';
 import CollapsibleObjectFieldTemplate from './templates/CollapsibleObjectFieldTemplate';
 import CollapsibleFieldTemplate from './templates/CollapsibleFieldTemplate';
 import CollapsibleKeyValueField from './fields/CollapsibleKeyValueField';
@@ -23,6 +24,7 @@ const widgets = {
   SelectWidget: CustomSelectWidget,
   TextareaWidget: CustomTextareaWidget,
   MultiSelectWidget,
+  HelmValuesWidget,
 };
 
 const templates = {
@@ -35,12 +37,14 @@ const fields = {
 };
 
 const fixNestedKeyValueFields = (obj: any): any => {
-  if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) return obj;
+  if (obj === null || obj === undefined) return obj;
+  if (Array.isArray(obj)) return obj.map(fixNestedKeyValueFields);
+  if (typeof obj !== 'object') return obj;
   const result = { ...obj };
   for (const [key, value] of Object.entries(result)) {
-    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      if ((value as any)[key] && typeof (value as any)[key] === 'object') {
-        result[key] = (value as any)[key];
+    if (typeof value === 'object' && value !== null) {
+      if (!Array.isArray(value) && (value as any)[key] && typeof (value as any)[key] === 'object') {
+        result[key] = fixNestedKeyValueFields((value as any)[key]);
       } else {
         result[key] = fixNestedKeyValueFields(value);
       }
@@ -79,7 +83,7 @@ const DynamicK8sForm: React.FC<DynamicK8sFormProps> = ({ nodeData, nodeId }) => 
         widgets={widgets}
         templates={templates}
         fields={fields}
-        formContext={{ nodeId }}
+        formContext={{ nodeId, autoSync: !!(nodeData.resource as any)?.autoSync }}
         showErrorList={false}
         liveValidate
       >
