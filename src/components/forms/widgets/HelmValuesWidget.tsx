@@ -36,6 +36,7 @@ const BASE_OVERHEAD = 68;
 const HelmValuesWidget: React.FC<WidgetProps> = ({ value, onChange, id, formContext }) => {
   const { generatedValues, setNodeAutoSync } = useHelmSync();
   const nodeId = (formContext as any)?.nodeId as string | undefined;
+  const autoSync = Boolean((formContext as any)?.autoSync);
   const [copied, setCopied] = useState<string | null>(null);
   const [refOpen, setRefOpen] = useState(true);
   const [textareaHeight, setTextareaHeight] = useState(240);
@@ -96,15 +97,23 @@ const HelmValuesWidget: React.FC<WidgetProps> = ({ value, onChange, id, formCont
   return (
     <div ref={containerRef} className="flex flex-col gap-2">
       {/* Toolbar */}
-      <div className="flex items-center justify-end flex-shrink-0">
+      <div className="flex items-center justify-between flex-shrink-0">
+        {autoSync ? (
+          <span className="inline-flex items-center gap-1 text-[10px] text-green-600 dark:text-green-400 font-medium">
+            <RefreshCw className="h-3 w-3 animate-spin" />
+            Auto-syncing from canvas
+          </span>
+        ) : (
+          <span className="text-[10px] text-gray-400 dark:text-gray-500">Manual mode</span>
+        )}
         <button
           type="button"
           onClick={handleRegenerate}
-          title="Regenerate values.yaml from current canvas nodes"
+          title="Sync values.yaml from current canvas nodes"
           className="inline-flex items-center gap-1 text-[10px] text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
         >
           <RefreshCw className="h-3 w-3" />
-          Sync from canvas
+          {autoSync ? 'Re-sync now' : 'Sync from canvas'}
         </button>
       </div>
 
