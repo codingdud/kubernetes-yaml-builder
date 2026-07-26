@@ -34,7 +34,7 @@ const SKIP_KEYS = new Set(['nameOverride', 'fullnameOverride']);
 const BASE_OVERHEAD = 68;
 
 const HelmValuesWidget: React.FC<WidgetProps> = ({ value, onChange, id, formContext }) => {
-  const { generatedValues, setNodeAutoSync } = useHelmSync();
+  const { setNodeAutoSync } = useHelmSync();
   const nodeId = (formContext as any)?.nodeId as string | undefined;
   const autoSync = Boolean((formContext as any)?.autoSync);
   const [copied, setCopied] = useState<string | null>(null);
