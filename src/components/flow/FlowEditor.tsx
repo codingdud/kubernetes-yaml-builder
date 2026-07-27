@@ -18,6 +18,23 @@ import { Download, Upload, LucideWrench, LucideBookOpen, ShieldCheck, Undo2, Red
 import { useFlowHistory, type FlowSnapshot } from '../../hooks/useFlowHistory';
 import { generateValuesYaml } from '../../utils/helmGenerator';
 import { HelmSyncContext } from '../../contexts/HelmSyncContext';
+import { DiagramActionsContext, type DiagramActions } from '../../ai/state/DiagramActionsContext';
+import { validateNodes } from '../../utils/kubeValidate';
+import type { DiagramSnapshot } from '../../ai/protocol/types';
+import { AIChatSidebar } from '../ai/AIChatSidebar';
+
+function deepMergeObjects(target: Record<string, unknown>, source: Record<string, unknown>): Record<string, unknown> {
+  const result = { ...target };
+  for (const key of Object.keys(source)) {
+    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key]) &&
+        target[key] && typeof target[key] === 'object' && !Array.isArray(target[key])) {
+      result[key] = deepMergeObjects(target[key] as Record<string, unknown>, source[key] as Record<string, unknown>);
+    } else {
+      result[key] = source[key];
+    }
+  }
+  return result;
+}
 
 const FlowEditorInner: React.FC = () => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
@@ -26,6 +43,8 @@ const FlowEditorInner: React.FC = () => {
   const [nextId, setNextId] = useState(1);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(320);
+  const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = useState(false);
+  const [leftPanelWidth, setLeftPanelWidth] = useState(360);
   const dragging = useRef(false);
   const dragStartX = useRef(0);
   const dragStartWidth = useRef(0);
@@ -344,14 +363,18 @@ const FlowEditorInner: React.FC = () => {
   }, []);
 
   const addNode = useCallback(
-    (kind: keyof typeof resourceRegistry, position?: { x: number; y: number }) => {
+    (kind: keyof typeof resourceRegistry, position?: { x: number; y: number }, overrides?: Record<string, unknown>): string => {
       const { schema, uiSchema, defaultResource } = resourceRegistry[kind];
+      const nodeId = `${nextId}`;
+      const resource = overrides
+        ? deepMergeObjects({ ...defaultResource }, overrides)
+        : { ...defaultResource };
       const newNode: K8sNode = {
-        id: `${nextId}`,
+        id: nodeId,
         type: kind.toLowerCase(),
         position: position || { x: Math.random() * 500, y: Math.random() * 500 },
         data: {
-          resource: { ...defaultResource },
+          resource,
           schema: schema as Record<string, unknown>,
           uiSchema
         },
@@ -359,6 +382,7 @@ const FlowEditorInner: React.FC = () => {
       };
       setNodes((nds) => [...nds, newNode]);
       setNextId(nextId + 1);
+      return nodeId;
     },
     [nextId, setNodes, setNextId]
   );
@@ -385,6 +409,63 @@ const FlowEditorInner: React.FC = () => {
     [nextId, setNodes, setNextId]
   );
 
+  const updateNodeResource = useCallback(
+    (nodeId: string, patch: Record<string, unknown>) => {
+      setNodes(nds =>
+        nds.map(n =>
+          n.id === nodeId
+            ? {
+                ...n,
+                data: {
+                  ...(n as K8sNode).data,
+                  resource: deepMergeObjects((n as K8sNode).data.resource as Record<string, unknown>, patch),
+                },
+              }
+            : n
+        )
+      );
+    },
+    [setNodes]
+  );
+
+  const connectNodesAPI = useCallback(
+    (sourceId: string, targetId: string): string => {
+      const edgeId = `${sourceId}-${targetId}-${Date.now()}`;
+      const allNodes = getNodes();
+      const sourceNode = allNodes.find(n => n.id === sourceId) as K8sNode | undefined;
+      const targetNode = allNodes.find(n => n.id === targetId) as K8sNode | undefined;
+      const sourceLabel = sourceNode?.data?.resource?.kind || sourceId;
+      const targetLabel = targetNode?.data?.resource?.kind || targetId;
+      const newEdge = {
+        id: edgeId,
+        source: sourceId,
+        target: targetId,
+        type: 'dataEdge' as const,
+        animated: true,
+        data: { label: `${sourceLabel} → ${targetLabel}` },
+      };
+      setEdges(eds => addEdge(newEdge as Edge, eds));
+      return edgeId;
+    },
+    [setEdges, getNodes]
+  );
+
+  const getSnapshot = useCallback((): DiagramSnapshot => ({
+    nodes: (nodes as K8sNode[]).map(n => ({
+      id: n.id,
+      kind: String(n.data.resource?.kind ?? n.type ?? 'Unknown'),
+      name: String((n.data.resource as any)?.metadata?.name ?? n.id),
+      namespace: (n.data.resource as any)?.metadata?.namespace,
+      resource: (n.data.resource ?? {}) as Record<string, unknown>,
+    })),
+    edges: edges.map(e => ({
+      id: e.id,
+      source: e.source,
+      target: e.target,
+      label: String((e.data as any)?.label ?? ''),
+    })),
+  }), [nodes, edges]);
+
   const onDragStartFromToolbar = (event: React.DragEvent, kind: string) => {
     event.dataTransfer.setData('application/reactflow', kind);
     setType(kind as keyof typeof resourceRegistry);
@@ -408,18 +489,42 @@ const FlowEditorInner: React.FC = () => {
     [screenToFlowPosition, type, addNode]
   );
 
-  const generateYAML = () => {
+  const generateYAML = useCallback(() => {
     const helmKinds = new Set(['HelmChart', 'HelmValues']);
     const k8sNodes = nodes.filter((n) => !helmKinds.has(String((n as K8sNode).data.resource?.kind)));
     if (k8sNodes.length === 0) return '';
     return k8sNodes.map((node) => yaml.dump((node as K8sNode).data.resource, { indent: 2 })).join('---\n');
-  };
+  }, [nodes]);
+
+  const diagramActions = useMemo<DiagramActions>(() => ({
+    addNode: (kind, overrides, position) => addNode(kind, position, overrides),
+    removeNodes: handleRemoveNodes,
+    updateNode: updateNodeResource,
+    connectNodes: connectNodesAPI,
+    getSnapshot,
+    generateYAML,
+    importYAML: handleYamlImport,
+    validateDiagram: () => validateNodes(nodes as Node[]),
+  }), [addNode, handleRemoveNodes, updateNodeResource, connectNodesAPI, getSnapshot, generateYAML, handleYamlImport, nodes]);
 
   return (
+    <DiagramActionsContext.Provider value={diagramActions}>
     <HelmSyncContext.Provider value={{ generatedValues, setNodeAutoSync }}>
     <div className="flex h-full">
+      <AIChatSidebar
+        onCollapseChange={setIsLeftPanelCollapsed}
+        width={leftPanelWidth}
+        onWidthChange={setLeftPanelWidth}
+      />
       <div
-        style={{ width: isSidebarCollapsed ? '100%' : `calc(100% - ${sidebarWidth + 4}px)` }}
+        style={{
+          width: (() => {
+            const leftW = isLeftPanelCollapsed ? 0 : leftPanelWidth + 4;
+            const rightW = isSidebarCollapsed ? 0 : sidebarWidth + 4;
+            if (leftW === 0 && rightW === 0) return '100%';
+            return `calc(100% - ${leftW + rightW}px)`;
+          })()
+        }}
         className="h-full flex-shrink-0"
         ref={reactFlowWrapper}
       >
@@ -503,6 +608,7 @@ const FlowEditorInner: React.FC = () => {
       )}
     </div>
     </HelmSyncContext.Provider>
+    </DiagramActionsContext.Provider>
   );
 };
 

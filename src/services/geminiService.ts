@@ -1,6 +1,3 @@
-
-
-
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import resourceRegistry from '../config/resourceRegistry';
 import yamlExamples from '../data/yamlExamples.json';
@@ -11,26 +8,24 @@ export interface GenerationState {
   error?: string;
 }
 
-class GeminiService {
-  private genAI: GoogleGenerativeAI | null = null;
-  private apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+export interface GenerationOptions {
+  apiKey?: string;
+  model?: string;
+}
 
-  constructor() {
-    try {
-      if (!this.apiKey) {
-        console.error('VITE_GEMINI_API_KEY environment variable not set');
-        return;
-      }
-      this.genAI = new GoogleGenerativeAI(this.apiKey);
-    } catch (error) {
-      console.error('Failed to initialize Gemini AI:', error);
-    }
+class GeminiService {
+  private envApiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+
+  private getClient(options?: GenerationOptions): GoogleGenerativeAI {
+    const key = options?.apiKey || this.envApiKey;
+    if (!key) throw new Error('No Gemini API key configured. Add your key in AI Settings.');
+    return new GoogleGenerativeAI(key);
   }
 
   private buildSystemPrompt(): string {
     const schemas = Object.keys(resourceRegistry).join(', ');
     const examples = JSON.stringify(yamlExamples, null, 2);
-    
+
     return `You are a Kubernetes YAML expert. Generate valid Kubernetes YAML based on user requirements.
 
 AVAILABLE RESOURCES: ${schemas}
@@ -53,18 +48,22 @@ RESPONSE FORMAT: Return only valid YAML separated by ---`;
 
   async generateKubernetesYAML(
     userPrompt: string,
-    onStateChange: (state: GenerationState) => void
+    onStateChange: (state: GenerationState) => void,
+    options?: GenerationOptions
   ): Promise<string> {
-    if (!this.genAI) {
-      onStateChange({ status: 'api-not-found', error: 'Gemini AI not initialized' });
-      throw new Error('Gemini AI service not available');
+    let genAI: GoogleGenerativeAI;
+    try {
+      genAI = this.getClient(options);
+    } catch (e: any) {
+      onStateChange({ status: 'api-not-found', error: e.message });
+      throw e;
     }
 
     try {
       onStateChange({ status: 'generating', progress: 'Initializing AI model...' });
 
-      const model = this.genAI.getGenerativeModel({ 
-        model: 'gemini-2.5-flash',
+      const model = genAI.getGenerativeModel({
+        model: options?.model || 'gemini-2.5-flash',
         generationConfig: {
           temperature: 0.7,
           topK: 40,
@@ -81,7 +80,7 @@ RESPONSE FORMAT: Return only valid YAML separated by ---`;
       onStateChange({ status: 'generating', progress: 'Generating YAML...' });
 
       const result = await model.generateContent(fullPrompt);
-      
+
       if (!result.response) {
         throw new Error('No response from AI model');
       }
@@ -89,7 +88,7 @@ RESPONSE FORMAT: Return only valid YAML separated by ---`;
       onStateChange({ status: 'generating', progress: 'Processing response...' });
 
       const generatedText = result.response.text();
-      
+
       if (!generatedText || generatedText.trim().length === 0) {
         throw new Error('Empty response from AI model');
       }
@@ -97,12 +96,12 @@ RESPONSE FORMAT: Return only valid YAML separated by ---`;
       const cleanedYaml = this.cleanYamlResponse(generatedText);
 
       onStateChange({ status: 'completed' });
-      
+
       return cleanedYaml;
 
     } catch (error: any) {
       console.error('Gemini AI Error:', error);
-      
+
       let errorMessage = 'Unknown error occurred';
       let status: GenerationState['status'] = 'error';
 
@@ -128,7 +127,7 @@ RESPONSE FORMAT: Return only valid YAML separated by ---`;
 
   private cleanYamlResponse(response: string): string {
     let cleaned = response.replace(/```yaml\n?/g, '').replace(/```\n?/g, '');
-    
+
     const firstApiVersion = cleaned.indexOf('apiVersion:');
     if (firstApiVersion > 0) {
       cleaned = cleaned.substring(firstApiVersion);
@@ -136,7 +135,7 @@ RESPONSE FORMAT: Return only valid YAML separated by ---`;
 
     const lines = cleaned.split('\n');
     let lastValidLine = lines.length - 1;
-    
+
     for (let i = lines.length - 1; i >= 0; i--) {
       const line = lines[i].trim();
       if (line && !line.startsWith('#') && (line.includes(':') || line.startsWith('-'))) {
@@ -148,8 +147,8 @@ RESPONSE FORMAT: Return only valid YAML separated by ---`;
     return lines.slice(0, lastValidLine + 1).join('\n').trim();
   }
 
-  isAvailable(): boolean {
-    return this.genAI !== null;
+  isAvailable(options?: GenerationOptions): boolean {
+    return !!(options?.apiKey || this.envApiKey);
   }
 }
 
